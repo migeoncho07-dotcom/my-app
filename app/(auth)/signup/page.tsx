@@ -7,6 +7,7 @@ import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'fire
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
 import { createUserWithNewGroup, AVATAR_COLORS, randomAvatarColor } from '@/lib/firestore';
+import { joinWithInviteCode } from '@/lib/invite-client';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/ui/InputField';
 
@@ -54,6 +55,7 @@ export default function SignupPage() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [nickname, setNickname] = useState('');
   const [avatar, setAvatar] = useState(randomAvatarColor());
+  const [inviteCode, setInviteCode] = useState('');
 
   const [accountUid, setAccountUid] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -147,17 +149,23 @@ export default function SignupPage() {
     setError('');
     setLoading(true);
     try {
-      await createUserWithNewGroup({
-        uid,
-        email: (email || auth.currentUser?.email || '').trim(),
-        nickname: nickname.trim(),
-        avatarColor: avatar,
-        kidBirthdays: [], // 아이 정보는 나중에 '나' 탭에서 입력
-      });
+      if (inviteCode.trim()) {
+        // 초대 코드가 있으면 친구 그룹에 합류 (서버에서 처리)
+        await joinWithInviteCode(inviteCode.trim(), nickname.trim(), avatar);
+      } else {
+        // 없으면 나만의 새 그룹 생성
+        await createUserWithNewGroup({
+          uid,
+          email: (email || auth.currentUser?.email || '').trim(),
+          nickname: nickname.trim(),
+          avatarColor: avatar,
+          kidBirthdays: [], // 아이 정보는 나중에 '나' 탭에서 입력
+        });
+      }
       await refreshProfile();
       setStep(3);
-    } catch {
-      setError('저장 중 문제가 생겼어요. 다시 시도해 주세요.');
+    } catch (e: any) {
+      setError(e?.message || '저장 중 문제가 생겼어요. 다시 시도해 주세요.');
     } finally {
       setLoading(false);
     }
@@ -292,6 +300,23 @@ export default function SignupPage() {
               />
             ))}
           </div>
+
+          {/* 초대 코드 (선택) */}
+          <div style={{ marginTop: 24 }}>
+            <InputField
+              label="초대 코드 (선택)"
+              placeholder="친구에게 받은 6자리 코드"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              maxLength={6}
+              autoCapitalize="characters"
+              style={{ letterSpacing: '0.15em', fontWeight: 700 }}
+            />
+            <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', fontWeight: 500, margin: '8px 4px 0', lineHeight: 1.5 }}>
+              코드를 넣으면 친구 그룹에 합류해요. 없으면 나만의 공간이 만들어져요.
+            </div>
+          </div>
+
           <ErrorText error={error} />
           <BottomArea>
             <Button onClick={finishSignup} disabled={loading}>

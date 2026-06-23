@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { subscribeMembers } from '@/lib/firestore';
+import { createInviteCode } from '@/lib/invite-client';
+import Button from '@/components/ui/Button';
 import type { Member } from '@/types';
 
 export default function MembersPage() {
@@ -10,10 +12,40 @@ export default function MembersPage() {
   const groupId = profile?.group_id;
   const [members, setMembers] = useState<Member[]>([]);
 
+  // 초대 코드 생성 상태
+  const [code, setCode] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState('');
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     if (!groupId) return;
     return subscribeMembers(groupId, setMembers);
   }, [groupId]);
+
+  async function handleInvite() {
+    setInviteError('');
+    setCopied(false);
+    setInviting(true);
+    try {
+      const res = await createInviteCode();
+      setCode(res.code);
+    } catch (e: any) {
+      setInviteError(e?.message || '초대 코드 생성에 실패했어요.');
+    } finally {
+      setInviting(false);
+    }
+  }
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* 클립보드 권한 없으면 무시 */
+    }
+  }
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -60,21 +92,45 @@ export default function MembersPage() {
         ))}
       </div>
 
-      {/* 초대하기 (다음 단계에서 동작 연결) */}
-      <div style={{ padding: '0 20px', marginTop: 'auto' }}>
-        <div
-          style={{
-            background: 'var(--ios-material)',
-            borderRadius: 16,
-            padding: 16,
-            textAlign: 'center',
-            fontSize: 13.5,
-            fontWeight: 600,
-            color: 'var(--text-tertiary)',
-          }}
-        >
-          🎟️ 초대 코드 기능은 곧 추가돼요
-        </div>
+      {/* 초대하기 */}
+      <div style={{ padding: '0 20px 8px', marginTop: 'auto' }}>
+        {code ? (
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid var(--border-light)',
+              borderRadius: 18,
+              padding: 18,
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 12.5, color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 10 }}>
+              친구에게 이 코드를 보내주세요 (48시간 · 1회용)
+            </div>
+            <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--brand)', paddingLeft: '0.2em' }}>
+              {code}
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
+              <Button variant="secondary" onClick={copyCode}>
+                {copied ? '복사됐어요 ✓' : '코드 복사'}
+              </Button>
+              <Button variant="secondary" onClick={handleInvite} disabled={inviting}>
+                {inviting ? '생성 중…' : '새 코드'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Button onClick={handleInvite} disabled={inviting}>
+              {inviting ? '코드 만드는 중…' : '🎟️ 초대 코드 만들기'}
+            </Button>
+            {inviteError && (
+              <div style={{ color: 'var(--brand-strong)', fontSize: 12.5, fontWeight: 600, textAlign: 'center', marginTop: 10 }}>
+                {inviteError}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
