@@ -5,6 +5,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
   collection,
   serverTimestamp,
   onSnapshot,
@@ -12,7 +13,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { User, Place, Member } from '@/types';
+import type { User, Place, Member, Category } from '@/types';
 
 // 아바타 색상 팔레트 (가입 시 고르거나 랜덤 배정)
 export const AVATAR_COLORS = [
@@ -78,6 +79,35 @@ export async function getUserProfile(uid: string): Promise<User | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   if (!snap.exists()) return null;
   return { uid, ...(snap.data() as Omit<User, 'uid'>) };
+}
+
+// 장소를 그룹에 저장. 저장 시 added_by 는 반드시 본인(uid).
+export interface NewPlaceInput {
+  title: string;
+  category: Category;
+  region: string;
+  address: string;
+  lat: number;
+  lng: number;
+  date_range: string;
+  age_target: string;
+  memo: string;
+  source_text: string;
+  ai_confidence: number;
+  kakao_place_id: string;
+}
+
+export async function addPlace(
+  groupId: string,
+  uid: string,
+  data: NewPlaceInput
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'groups', groupId, 'places'), {
+    ...data,
+    added_by: uid,
+    added_at: serverTimestamp(),
+  });
+  return ref.id;
 }
 
 // 그룹 장소 실시간 구독 (최신순). 해제 함수를 반환합니다.
