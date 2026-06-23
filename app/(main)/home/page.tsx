@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { fetchGroup } from '@/lib/group-client';
+import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import PlaceCard from '@/components/place/PlaceCard';
 import SegmentedControl from '@/components/ui/SegmentedControl';
@@ -30,9 +30,14 @@ export default function HomePage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
 
-  // 그룹 장소/멤버 — 서버 API 경유로 가져오고 8초마다 갱신(폴링)
+  // 그룹 장소/멤버 — 캐시 즉시표시 후 서버 갱신 + 8초 폴링
   useEffect(() => {
     let alive = true;
+    const c = cachedGroupSync();
+    if (c) {
+      setPlaces(c.places);
+      setMembers(c.members);
+    }
     async function load() {
       try {
         const d = await fetchGroup();

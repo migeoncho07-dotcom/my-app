@@ -15,10 +15,52 @@ export interface GroupData {
   groupId: string;
 }
 
+// --- 캐시 (즉시 렌더 + 백그라운드 갱신) ---
+const CACHE_KEY = 'airang_group';
+let memCache: GroupData | null = null;
+let inflight: Promise<GroupData> | null = null;
+
+// 동기 캐시 읽기 (초기 렌더용). SSR/없으면 null.
+export function cachedGroupSync(): GroupData | null {
+  if (memCache) return memCache;
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (raw) {
+      memCache = JSON.parse(raw);
+      return memCache;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 export async function fetchGroup(): Promise<GroupData> {
-  const res = await fetch('/api/group', { headers: { Authorization: `Bearer ${await token()}` } });
-  if (!res.ok) throw new Error('group-' + res.status);
-  return res.json();
+  // 동시 호출은 하나로 합침 (중복 요청 방지)
+  if (inflight) return inflight;
+  inflight = (async () => {
+    try {
+      const res = await fetch('/api/group', { headers: { Authorization: `Bearer ${await token()}` } });
+      if (!res.ok) throw new Error('group-' + res.status);
+      const data: GroupData = await res.json();
+      memCache = data;
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      } catch {
+        /* ignore */
+      }
+      return data;
+    } finally {
+      inflight = null;
+    }
+  })();
+  return inflight;
+}
+
+// 로그인 직후 미리 당겨두기 (홈 진입 시 이미 준비)
+export function prefetchGroup() {
+  fetchGroup().catch(() => {});
 }
 
 export async function savePlaceApi(data: Record<string, unknown>): Promise<{ id: string }> {

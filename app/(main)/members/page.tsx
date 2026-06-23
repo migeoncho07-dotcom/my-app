@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { fetchGroup } from '@/lib/group-client';
+import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { createInviteCode } from '@/lib/invite-client';
 import Button from '@/components/ui/Button';
 import type { Member } from '@/types';
@@ -20,6 +20,8 @@ export default function MembersPage() {
 
   useEffect(() => {
     let alive = true;
+    const c = cachedGroupSync();
+    if (c) setMembers(c.members);
     fetchGroup()
       .then((d) => {
         if (alive) setMembers(d.members);

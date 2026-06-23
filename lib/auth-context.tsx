@@ -20,6 +20,7 @@ import {
 } from 'firebase/auth';
 import { auth } from './firebase';
 import { getUserProfile } from './firestore';
+import { prefetchGroup } from './group-client';
 import type { User } from '@/types';
 
 interface AuthContextValue {
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(p);
       setProfileError(false);
       setProfileErrorMsg('');
+      if (p) prefetchGroup(); // 홈 진입 전 그룹 데이터 미리 당겨두기
     } catch (e: any) {
       const msg = `${e?.code ? e.code + ' · ' : ''}${e?.message || String(e)}`;
       console.error('[profile] load failed:', e);

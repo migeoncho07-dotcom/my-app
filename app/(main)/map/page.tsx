@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
-import { fetchGroup } from '@/lib/group-client';
+import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { searchKakao } from '@/lib/parse-client';
 import { category } from '@/styles/tokens';
 import CategoryBadge from '@/components/ui/CategoryBadge';
@@ -40,6 +40,8 @@ export default function MapPage() {
 
   useEffect(() => {
     let alive = true;
+    const c = cachedGroupSync();
+    if (c) setPlaces(c.places);
     fetchGroup()
       .then((d) => alive && setPlaces(d.places))
       .catch(() => {});
@@ -132,12 +134,14 @@ export default function MapPage() {
     }
   }
 
-  // 주변 장소 (검색 위치 기준 거리순)
+  // 주변 장소 (검색 위치 기준 반경 3km 이내, 거리순)
+  const RADIUS_M = 3000;
   const nearby = useMemo(() => {
     if (!center) return [];
     return places
       .filter((p) => p.lat && p.lng)
       .map((p) => ({ p, d: distMeters(center, { lat: p.lat, lng: p.lng }) }))
+      .filter((x) => x.d <= RADIUS_M)
       .sort((a, b) => a.d - b.d);
   }, [center, places]);
 
@@ -222,7 +226,7 @@ export default function MapPage() {
             <div style={{ padding: '12px 18px 6px' }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 10px' }} />
               <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-                {center.label} 주변 <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>{nearby.length}곳</span>
+                {center.label} 주변 <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>3km 이내 · {nearby.length}곳</span>
               </div>
             </div>
             <div style={{ overflowY: 'auto', padding: '4px 14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
