@@ -26,7 +26,8 @@ export const auth = getAuth(app);
 // 문제를 방지합니다. 이미 초기화돼 있으면(HMR 등) 기존 인스턴스를 재사용합니다.
 function createDb() {
   try {
-    return initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+    // forceLongPolling: 막힌 네트워크/프록시/모바일망에서도 확실히 연결되도록 강제.
+    return initializeFirestore(app, { experimentalForceLongPolling: true });
   } catch {
     return getFirestore(app);
   }
