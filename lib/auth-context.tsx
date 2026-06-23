@@ -50,19 +50,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadProfile = useCallback(async (uid: string) => {
     try {
-      // 네트워크가 막혀 getDoc 이 무한 대기하는 경우를 대비해 12초 타임아웃
-      const p = await withTimeout(getUserProfile(uid), 12000);
+      // 1) 인증 토큰 가져오기 (여기서 막히면 인증/도메인 문제)
+      const cur = auth.currentUser;
+      if (cur) {
+        try {
+          await withTimeout(cur.getIdToken(), 8000);
+        } catch {
+          throw new Error('auth-token-timeout');
+        }
+      }
+      // 2) Firestore 프로필 읽기 (여기서 막히면 Firestore 연결 문제)
+      let p: User | null;
+      try {
+        p = await withTimeout(getUserProfile(uid), 8000);
+      } catch (e: any) {
+        throw new Error(e?.code ? `firestore:${e.code}` : 'firestore-timeout');
+      }
       setProfile(p);
       setProfileError(false);
       setProfileErrorMsg('');
     } catch (e: any) {
-      // 읽기 자체가 실패(네트워크/타임아웃) → '프로필 없음'이 아니라 '에러'로 표시.
-      // 가입 화면으로 보내 기존 데이터를 덮어쓰는 일을 막습니다.
-      const msg = `${e?.code ? e.code + ' · ' : ''}${e?.message || String(e)}`;
       console.error('[profile] load failed:', e);
       setProfile(null);
       setProfileError(true);
-      setProfileErrorMsg(msg);
+      setProfileErrorMsg(e?.message || String(e));
     }
   }, []);
 
