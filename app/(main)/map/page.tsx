@@ -1,55 +1,26 @@
 'use client';
 
+// 무료 오픈맵(OpenStreetMap + Leaflet). 카카오 비즈월렛/키 불필요.
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
+import 'leaflet/dist/leaflet.css';
 import { fetchGroup } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import CategoryBadge from '@/components/ui/CategoryBadge';
 import type { Place } from '@/types';
 
-declare global {
-  interface Window {
-    kakao: any;
-  }
-}
-
-const JS_KEY = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
-
-// 카카오맵 SDK 스크립트를 한 번만 로드
-function loadKakaoSdk(): Promise<any> {
-  return new Promise((resolve, reject) => {
-    if (!JS_KEY) return reject(new Error('no-key'));
-    if (window.kakao && window.kakao.maps) return resolve(window.kakao);
-    const existing = document.getElementById('kakao-sdk') as HTMLScriptElement | null;
-    const onload = () => window.kakao.maps.load(() => resolve(window.kakao));
-    if (existing) {
-      existing.addEventListener('load', onload);
-      return;
-    }
-    const s = document.createElement('script');
-    s.id = 'kakao-sdk';
-    s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${JS_KEY}&autoload=false`;
-    s.async = true;
-    s.onload = onload;
-    s.onerror = () => reject(new Error('load-failed'));
-    document.head.appendChild(s);
-  });
-}
-
 export default function MapPage() {
   const router = useRouter();
-  const { profile } = useAuth();
-  const groupId = profile?.group_id;
-
   const mapRef = useRef<HTMLDivElement>(null);
-  const kakaoMap = useRef<any>(null);
-  const overlaysRef = useRef<any[]>([]);
+  const mapObj = useRef<any>(null);
+  const Lref = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+
   const [places, setPlaces] = useState<Place[]>([]);
   const [selected, setSelected] = useState<Place | null>(null);
-  const [status, setStatus] = useState<'init' | 'ready' | 'nokey' | 'error'>('init');
+  const [ready, setReady] = useState(false);
 
-  // 장소 — 서버 API 경유로 가져오기
+  // 그룹 장소 가져오기
   useEffect(() => {
     let alive = true;
     fetchGroup()
@@ -65,68 +36,86 @@ export default function MapPage() {
   // 지도 초기화
   useEffect(() => {
     let cancelled = false;
-    loadKakaoSdk()
-      .then((kakao) => {
-        if (cancelled || !mapRef.current) return;
-        kakaoMap.current = new kakao.maps.Map(mapRef.current, {
-          center: new kakao.maps.LatLng(37.5665, 126.978), // 서울 기본
-          level: 8,
-        });
-        setStatus('ready');
-      })
-      .catch((e) => setStatus(e.message === 'no-key' ? 'nokey' : 'error'));
+    (async () => {
+      const L = (await import('leaflet')).default;
+      if (cancelled || !mapRef.current || mapObj.current) return;
+      Lref.current = L;
+      const map = L.map(mapRef.current).setView([37.5665, 126.978], 11); // 서울 기본
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 19,
+      }).addTo(map);
+      mapObj.current = map;
+      setReady(true);
+    })();
     return () => {
       cancelled = true;
+      if (mapObj.current) {
+        mapObj.current.remove();
+        mapObj.current = null;
+      }
     };
   }, []);
 
   // 마커 갱신
   useEffect(() => {
-    const kakao = window.kakao;
-    if (status !== 'ready' || !kakao || !kakaoMap.current) return;
-    // 기존 오버레이 제거
-    overlaysRef.current.forEach((o) => o.setMap(null));
-    overlaysRef.current = [];
+    const L = Lref.current;
+    const map = mapObj.current;
+    if (!ready || !L || !map) return;
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
 
     const withCoord = places.filter((p) => p.lat && p.lng);
-    const bounds = new kakao.maps.LatLngBounds();
-
+    const latlngs: [number, number][] = [];
     withCoord.forEach((p) => {
       const c = category[p.category] ?? category.etc;
-      const el = document.createElement('div');
-      el.style.cssText = `transform:translate(-50%,-100%);cursor:pointer;display:flex;flex-direction:column;align-items:center;`;
-      el.innerHTML = `<div style="background:${c.text};color:#fff;border-radius:14px 14px 14px 2px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 10px -3px rgba(0,0,0,.4);">${c.emoji}</div>`;
-      el.onclick = () => setSelected(p);
-      const pos = new kakao.maps.LatLng(p.lat, p.lng);
-      const overlay = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1 });
-      overlay.setMap(kakaoMap.current);
-      overlaysRef.current.push(overlay);
-      bounds.extend(pos);
+      const icon = L.divIcon({
+        className: 'airang-pin',
+        html: `<div style="transform:translate(-50%,-100%);background:${c.text};color:#fff;border-radius:14px 14px 14px 2px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 10px -3px rgba(0,0,0,.4);">${c.emoji}</div>`,
+        iconSize: [0, 0],
+      });
+      const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
+      m.on('click', () => setSelected(p));
+      markersRef.current.push(m);
+      latlngs.push([p.lat, p.lng]);
     });
+    if (latlngs.length > 0) {
+      map.fitBounds(latlngs, { padding: [50, 50], maxZoom: 15 });
+    }
+  }, [places, ready]);
 
-    if (withCoord.length > 0) kakaoMap.current.setBounds(bounds);
-  }, [places, status]);
+  const hasPins = places.some((p) => p.lat && p.lng);
 
   return (
     <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '60px 20px 12px', fontSize: 27, fontWeight: 800, letterSpacing: '-0.03em' }}>지도</div>
 
       <div style={{ flex: 1, position: 'relative', minHeight: 320 }}>
-        <div ref={mapRef} style={{ position: 'absolute', inset: 0 }} />
+        <div ref={mapRef} style={{ position: 'absolute', inset: 0, background: '#e8eef0' }} />
 
-        {status === 'nokey' && (
-          <Overlay emoji="🗺️" title="지도 키 설정이 필요해요" desc={'카카오 JavaScript 키를 넣으면\n장소들이 지도에 표시돼요.'} />
-        )}
-        {status === 'error' && (
-          <Overlay emoji="⚠️" title="지도를 불러오지 못했어요" desc={'잠시 후 다시 시도해 주세요.'} />
-        )}
-        {status === 'ready' && places.filter((p) => p.lat && p.lng).length === 0 && (
-          <Overlay emoji="📍" title="지도에 표시할 장소가 없어요" desc={'주소가 있는 장소를 추가하면\n여기 핀으로 보여요.'} />
+        {ready && !hasPins && (
+          <div
+            style={{
+              position: 'absolute',
+              left: 16,
+              right: 16,
+              top: 16,
+              background: 'rgba(255,255,255,.92)',
+              borderRadius: 14,
+              padding: '12px 14px',
+              textAlign: 'center',
+              fontSize: 13,
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              boxShadow: '0 6px 16px -8px rgba(0,0,0,.3)',
+            }}
+          >
+            📍 주소가 있는 장소를 추가하면 여기 핀으로 보여요
+          </div>
         )}
 
-        {/* 선택된 장소 미니 카드 */}
         {selected && (
-          <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16 }}>
+          <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, zIndex: 1000 }}>
             <button
               onClick={() => router.push(`/place/${selected.id}`)}
               style={{
@@ -154,7 +143,7 @@ export default function MapPage() {
             </button>
             <button
               onClick={() => setSelected(null)}
-              style={{ position: 'absolute', top: -10, right: -6, width: 26, height: 26, borderRadius: '50%', background: 'var(--text-tertiary)', color: '#fff', fontSize: 14, fontWeight: 700 }}
+              style={{ position: 'absolute', top: -10, right: -6, width: 26, height: 26, borderRadius: '50%', background: 'var(--text-tertiary)', color: '#fff', fontSize: 14, fontWeight: 700, zIndex: 1001 }}
               aria-label="닫기"
             >
               ×
@@ -162,29 +151,6 @@ export default function MapPage() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function Overlay({ emoji, title, desc }: { emoji: string; title: string; desc: string }) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'var(--bg)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        textAlign: 'center',
-        padding: 24,
-      }}
-    >
-      <div style={{ fontSize: 44 }}>{emoji}</div>
-      <div style={{ fontSize: 15, fontWeight: 700 }}>{title}</div>
-      <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{desc}</div>
     </div>
   );
 }
