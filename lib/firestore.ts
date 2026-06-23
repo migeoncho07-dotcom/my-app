@@ -7,9 +7,12 @@ import {
   setDoc,
   collection,
   serverTimestamp,
+  onSnapshot,
+  query,
+  orderBy,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { User } from '@/types';
+import type { User, Place, Member } from '@/types';
 
 // 아바타 색상 팔레트 (가입 시 고르거나 랜덤 배정)
 export const AVATAR_COLORS = [
@@ -75,4 +78,44 @@ export async function getUserProfile(uid: string): Promise<User | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   if (!snap.exists()) return null;
   return { uid, ...(snap.data() as Omit<User, 'uid'>) };
+}
+
+// 그룹 장소 실시간 구독 (최신순). 해제 함수를 반환합니다.
+export function subscribePlaces(
+  groupId: string,
+  onData: (places: Place[]) => void
+): () => void {
+  const q = query(
+    collection(db, 'groups', groupId, 'places'),
+    orderBy('added_at', 'desc')
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      const places = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Place, 'id'>),
+      }));
+      onData(places);
+    },
+    () => onData([]) // 권한/네트워크 오류 시 빈 목록
+  );
+}
+
+// 그룹 멤버 실시간 구독 (등록자 닉네임 표시 등에 사용)
+export function subscribeMembers(
+  groupId: string,
+  onData: (members: Member[]) => void
+): () => void {
+  return onSnapshot(
+    collection(db, 'groups', groupId, 'members'),
+    (snap) => {
+      const members = snap.docs.map((d) => ({
+        uid: d.id,
+        ...(d.data() as Omit<Member, 'uid'>),
+      }));
+      onData(members);
+    },
+    () => onData([])
+  );
 }
