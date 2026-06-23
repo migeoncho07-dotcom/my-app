@@ -17,16 +17,12 @@ export async function GET(req: NextRequest) {
   const region = (searchParams.get('region') ?? '').trim();
   if (!q) return NextResponse.json({ places: [] });
 
-  const query = [region, q].filter(Boolean).join(' ');
-  const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=10`;
-
-  try {
+  async function search(query: string): Promise<KakaoPlace[]> {
+    const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=10`;
     const res = await fetch(url, { headers: { Authorization: `KakaoAK ${key}` } });
-    if (!res.ok) {
-      return NextResponse.json({ error: '카카오 검색에 실패했어요.' }, { status: 502 });
-    }
+    if (!res.ok) throw new Error('kakao-failed');
     const data = await res.json();
-    const places: KakaoPlace[] = (data.documents ?? []).map((d: any) => ({
+    return (data.documents ?? []).map((d: any) => ({
       place_name: d.place_name,
       address_name: d.address_name,
       road_address_name: d.road_address_name,
@@ -34,6 +30,14 @@ export async function GET(req: NextRequest) {
       y: d.y,
       id: d.id,
     }));
+  }
+
+  try {
+    // 1차: 지역+제목. 결과 없으면 2차: 제목만 (지역이 검색을 과하게 좁히는 경우 대비)
+    let places = await search([region, q].filter(Boolean).join(' '));
+    if (places.length === 0 && region) {
+      places = await search(q);
+    }
     return NextResponse.json({ places });
   } catch {
     return NextResponse.json({ error: '카카오 검색 중 오류가 발생했어요.' }, { status: 502 });
