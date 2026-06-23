@@ -42,3 +42,20 @@ export async function fetchPlaceApi(
   if (!res.ok) throw new Error('place-' + res.status);
   return res.json();
 }
+
+export async function updatePlaceApi(id: string, data: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`/api/place/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || '수정에 실패했어요.');
+}
+
+export async function deletePlaceApi(id: string): Promise<void> {
+  const res = await fetch(`/api/place/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${await token()}` },
+  });
+  if (!res.ok) throw new Error((await res.json()).error || '삭제에 실패했어요.');
+}

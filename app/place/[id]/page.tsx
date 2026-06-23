@@ -3,22 +3,42 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { fetchPlaceApi } from '@/lib/group-client';
+import { fetchPlaceApi, updatePlaceApi, deletePlaceApi } from '@/lib/group-client';
+import { searchKakao } from '@/lib/parse-client';
 import { category } from '@/styles/tokens';
 import { timeAgo } from '@/lib/age';
 import CategoryBadge from '@/components/ui/CategoryBadge';
-import type { Place } from '@/types';
+import type { Place, Category, KakaoPlace } from '@/types';
+
+const CATS = Object.keys(category) as Category[];
+
+interface Draft {
+  title: string;
+  category: Category;
+  region: string;
+  address: string;
+  lat: number;
+  lng: number;
+  date_range: string;
+  age_target: string;
+  memo: string;
+  kakao_place_id: string;
+}
 
 export default function PlaceDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = String(params.id);
-  const { profile, loading } = useAuth();
-  const groupId = profile?.group_id;
+  const { loading } = useAuth();
 
   const [place, setPlace] = useState<Place | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'notfound'>('loading');
   const [addedByName, setAddedByName] = useState('');
+
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -27,10 +47,7 @@ export default function PlaceDetailPage() {
       try {
         const { place: p, addedByName: name } = await fetchPlaceApi(id);
         if (!alive) return;
-        if (!p) {
-          setState('notfound');
-          return;
-        }
+        if (!p) return setState('notfound');
         setPlace(p);
         setAddedByName(name);
         setState('ready');
@@ -43,13 +60,54 @@ export default function PlaceDetailPage() {
     };
   }, [id, loading]);
 
-  if (state === 'loading') {
-    return <Centered>불러오는 중…</Centered>;
+  function startEdit() {
+    if (!place) return;
+    setDraft({
+      title: place.title,
+      category: place.category,
+      region: place.region,
+      address: place.address,
+      lat: place.lat,
+      lng: place.lng,
+      date_range: place.date_range,
+      age_target: place.age_target,
+      memo: place.memo,
+      kakao_place_id: place.kakao_place_id,
+    });
+    setEditing(true);
   }
+
+  async function save() {
+    if (!draft) return;
+    if (!draft.title.trim()) return;
+    setSaving(true);
+    try {
+      await updatePlaceApi(id, draft as unknown as Record<string, unknown>);
+      setPlace((prev) => (prev ? { ...prev, ...draft } : prev));
+      setEditing(false);
+    } catch {
+      /* keep editing */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function remove() {
+    if (!confirm('이 장소를 삭제할까요?')) return;
+    setDeleting(true);
+    try {
+      await deletePlaceApi(id);
+      router.replace('/home');
+    } catch {
+      setDeleting(false);
+    }
+  }
+
+  if (state === 'loading') return <Centered>불러오는 중…</Centered>;
   if (state === 'notfound' || !place) {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 20px' }}>
-        <BackBtn onClick={() => router.back()} />
+        <button onClick={() => router.back()} style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand)', alignSelf: 'flex-start' }}>← 뒤로</button>
         <Centered>장소를 찾을 수 없어요.</Centered>
       </div>
     );
@@ -65,64 +123,157 @@ export default function PlaceDetailPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 28 }}>
-      {/* 상단 뒤로가기 */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 0' }}>
-        <button
-          onClick={() => router.back()}
-          aria-label="뒤로"
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            background: 'var(--ios-material)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 18,
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-          }}
-        >
-          ←
+      {/* 상단 바: 뒤로 + 수정/완료 */}
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button onClick={() => (editing ? setEditing(false) : router.back())} aria-label="뒤로"
+          style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--ios-material)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
+          {editing ? '✕' : '←'}
         </button>
-      </div>
-
-      <div style={{ padding: '14px 20px 0' }}>
-        <CategoryBadge type={place.category} size="md" />
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 12, lineHeight: 1.25 }}>
-          {place.title}
-        </div>
-        {place.region && (
-          <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500, marginTop: 6 }}>
-            📍 {place.region}
-          </div>
+        {!editing ? (
+          <button onClick={startEdit} style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--brand)', padding: '8px 6px' }}>수정</button>
+        ) : (
+          <button onClick={save} disabled={saving} style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--brand)', padding: '8px 6px' }}>
+            {saving ? '저장 중…' : '완료'}
+          </button>
         )}
       </div>
 
-      {/* 인셋 정보 */}
-      <div style={{ padding: '20px' }}>
-        <div style={{ background: '#fff', border: '1px solid var(--border-light)', borderRadius: 16, overflow: 'hidden' }}>
-          <InfoRow label="주소" value={place.address || '미입력'} last={false} />
-          <InfoRow label="운영기간" value={place.date_range || '—'} last={false} />
-          <InfoRow label="대상연령" value={place.age_target || '—'} last={false} />
-          <InfoRow label="메모" value={place.memo || '—'} last={false} />
-          <InfoRow
-            label="등록"
-            value={`${addedByName || '멤버'}${place.added_at ? ' · ' + timeAgo(place.added_at as any) : ''}`}
-            last
-          />
-        </div>
-      </div>
+      {!editing ? (
+        /* ── 보기 ── */
+        <>
+          <div style={{ padding: '14px 20px 0' }}>
+            <CategoryBadge type={place.category} size="md" />
+            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 12, lineHeight: 1.25 }}>{place.title}</div>
+            {place.region && <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500, marginTop: 6 }}>📍 {place.region}</div>}
+          </div>
 
-      {/* 지도/길찾기 */}
-      <div style={{ padding: '0 20px', display: 'flex', gap: 10 }}>
-        <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}>
-          <div style={btnStyle(false)}>🗺️ 지도에서 보기</div>
-        </a>
-        <a href={routeUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}>
-          <div style={btnStyle(true)}>🚗 길찾기</div>
-        </a>
-      </div>
+          <div style={{ padding: '20px' }}>
+            <div style={{ background: '#fff', border: '1px solid var(--border-light)', borderRadius: 16, overflow: 'hidden' }}>
+              <InfoRow label="주소" value={place.address || '미입력'} />
+              <InfoRow label="운영기간" value={place.date_range || '—'} />
+              <InfoRow label="대상연령" value={place.age_target || '—'} />
+              <InfoRow label="메모" value={place.memo || '—'} />
+              <InfoRow label="등록" value={`${addedByName || '멤버'}${place.added_at ? ' · ' + timeAgo(place.added_at as any) : ''}`} last />
+            </div>
+          </div>
+
+          <div style={{ padding: '0 20px', display: 'flex', gap: 10 }}>
+            <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(false)}>🗺️ 지도에서 보기</div></a>
+            <a href={routeUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(true)}>🚗 길찾기</div></a>
+          </div>
+        </>
+      ) : (
+        /* ── 편집 ── */
+        draft && (
+          <EditForm
+            draft={draft}
+            setDraft={setDraft as (d: Draft) => void}
+            onDelete={remove}
+            deleting={deleting}
+          />
+        )
+      )}
+    </div>
+  );
+}
+
+function EditForm({
+  draft,
+  setDraft,
+  onDelete,
+  deleting,
+}: {
+  draft: Draft;
+  setDraft: (d: Draft) => void;
+  onDelete: () => void;
+  deleting: boolean;
+}) {
+  const [candidates, setCandidates] = useState<KakaoPlace[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const up = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
+
+  async function findAddr() {
+    setSearching(true);
+    try {
+      setCandidates(await searchKakao(draft.title, draft.region));
+    } catch {
+      setCandidates([]);
+    } finally {
+      setSearching(false);
+    }
+  }
+  function pick(k: KakaoPlace) {
+    up({ address: k.road_address_name || k.address_name, lat: parseFloat(k.y) || 0, lng: parseFloat(k.x) || 0, kakao_place_id: k.id });
+    setCandidates(null);
+  }
+
+  const f: React.CSSProperties = { width: '100%', background: '#fff', border: '1px solid var(--border)', borderRadius: 12, padding: '11px 13px', fontSize: 14.5, fontWeight: 500 };
+
+  return (
+    <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Field label="이름">
+        <input value={draft.title} onChange={(e) => up({ title: e.target.value })} style={f} />
+      </Field>
+      <Field label="카테고리">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {CATS.map((c) => {
+            const on = draft.category === c;
+            return (
+              <button key={c} onClick={() => up({ category: c })}
+                style={{ borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, background: on ? category[c].bg : 'var(--ios-material)', color: on ? category[c].text : 'var(--text-tertiary)' }}>
+                {category[c].emoji} {category[c].label}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <Field label="지역">
+        <input value={draft.region} onChange={(e) => up({ region: e.target.value })} placeholder="예: 서울 강남" style={f} />
+      </Field>
+      <Field label="주소">
+        <div style={{ display: 'flex', gap: 6 }}>
+          <input value={draft.address} onChange={(e) => up({ address: e.target.value })} placeholder="주소" style={{ ...f, flex: 1 }} />
+          <button onClick={findAddr} disabled={searching} style={{ flex: 'none', borderRadius: 12, padding: '0 13px', fontSize: 13, fontWeight: 700, background: 'var(--ios-material)', color: 'var(--text-secondary)' }}>
+            {searching ? '…' : '📍 찾기'}
+          </button>
+        </div>
+        {candidates && (
+          <div style={{ marginTop: 6, border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            {candidates.length === 0 ? (
+              <div style={{ padding: 10, fontSize: 12.5, color: 'var(--text-tertiary)' }}>검색 결과가 없어요.</div>
+            ) : (
+              candidates.map((k) => (
+                <button key={k.id} onClick={() => pick(k)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderBottom: '1px solid var(--border-light)', background: '#fff' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{k.place_name}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', marginTop: 1 }}>{k.road_address_name || k.address_name}</div>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </Field>
+      <Field label="대상연령">
+        <input value={draft.age_target} onChange={(e) => up({ age_target: e.target.value })} placeholder="예: 3~7세" style={f} />
+      </Field>
+      <Field label="운영기간">
+        <input value={draft.date_range} onChange={(e) => up({ date_range: e.target.value })} placeholder="예: 2025.07.01~07.31" style={f} />
+      </Field>
+      <Field label="메모">
+        <textarea value={draft.memo} onChange={(e) => up({ memo: e.target.value })} style={{ ...f, minHeight: 64, resize: 'vertical' }} />
+      </Field>
+
+      <button onClick={onDelete} disabled={deleting} style={{ marginTop: 6, marginBottom: 8, fontSize: 14, fontWeight: 700, color: 'var(--brand-strong)', padding: 12 }}>
+        {deleting ? '삭제 중…' : '🗑️ 이 장소 삭제'}
+      </button>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', margin: '0 2px 7px' }}>{label}</div>
+      {children}
     </div>
   );
 }
@@ -140,27 +291,12 @@ function btnStyle(primary: boolean): React.CSSProperties {
   };
 }
 
-function InfoRow({ label, value, last }: { label: string; value: string; last: boolean }) {
+function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 12,
-        padding: '13px 16px',
-        borderBottom: last ? 'none' : '1px solid var(--border-light)',
-      }}
-    >
+    <div style={{ display: 'flex', gap: 12, padding: '13px 16px', borderBottom: last ? 'none' : '1px solid var(--border-light)' }}>
       <div style={{ width: 64, flex: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)' }}>{label}</div>
       <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.5, wordBreak: 'break-all' }}>{value}</div>
     </div>
-  );
-}
-
-function BackBtn({ onClick }: { onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand)', alignSelf: 'flex-start', marginBottom: 12 }}>
-      ← 뒤로
-    </button>
   );
 }
 

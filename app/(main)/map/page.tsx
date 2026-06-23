@@ -1,13 +1,28 @@
 'use client';
 
-// 무료 오픈맵(OpenStreetMap + Leaflet). 카카오 비즈월렛/키 불필요.
-import { useEffect, useRef, useState } from 'react';
+// 무료 오픈맵(OpenStreetMap + Leaflet) + 위치 검색 → 주변 장소 거리순 (시안 05)
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
 import { fetchGroup } from '@/lib/group-client';
+import { searchKakao } from '@/lib/parse-client';
 import { category } from '@/styles/tokens';
 import CategoryBadge from '@/components/ui/CategoryBadge';
 import type { Place } from '@/types';
+
+function distMeters(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+function fmtDist(m: number) {
+  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+}
 
 export default function MapPage() {
   const router = useRouter();
@@ -15,18 +30,18 @@ export default function MapPage() {
   const mapObj = useRef<any>(null);
   const Lref = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const centerMarkerRef = useRef<any>(null);
 
   const [places, setPlaces] = useState<Place[]>([]);
-  const [selected, setSelected] = useState<Place | null>(null);
   const [ready, setReady] = useState(false);
+  const [query, setQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [center, setCenter] = useState<{ lat: number; lng: number; label: string } | null>(null);
 
-  // 그룹 장소 가져오기
   useEffect(() => {
     let alive = true;
     fetchGroup()
-      .then((d) => {
-        if (alive) setPlaces(d.places);
-      })
+      .then((d) => alive && setPlaces(d.places))
       .catch(() => {});
     return () => {
       alive = false;
@@ -40,7 +55,7 @@ export default function MapPage() {
       const L = (await import('leaflet')).default;
       if (cancelled || !mapRef.current || mapObj.current) return;
       Lref.current = L;
-      const map = L.map(mapRef.current).setView([37.5665, 126.978], 11); // 서울 기본
+      const map = L.map(mapRef.current).setView([37.5665, 126.978], 11);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
         maxZoom: 19,
@@ -57,32 +72,74 @@ export default function MapPage() {
     };
   }, []);
 
-  // 마커 갱신
+  // 장소 핀
   useEffect(() => {
     const L = Lref.current;
     const map = mapObj.current;
     if (!ready || !L || !map) return;
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
-
-    const withCoord = places.filter((p) => p.lat && p.lng);
     const latlngs: [number, number][] = [];
-    withCoord.forEach((p) => {
-      const c = category[p.category] ?? category.etc;
-      const icon = L.divIcon({
-        className: 'airang-pin',
-        html: `<div style="transform:translate(-50%,-100%);background:${c.text};color:#fff;border-radius:14px 14px 14px 2px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 10px -3px rgba(0,0,0,.4);">${c.emoji}</div>`,
-        iconSize: [0, 0],
+    places
+      .filter((p) => p.lat && p.lng)
+      .forEach((p) => {
+        const c = category[p.category] ?? category.etc;
+        const icon = L.divIcon({
+          className: 'airang-pin',
+          html: `<div style="transform:translate(-50%,-100%);background:${c.text};color:#fff;border-radius:14px 14px 14px 2px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 10px -3px rgba(0,0,0,.4);">${c.emoji}</div>`,
+          iconSize: [0, 0],
+        });
+        const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
+        m.on('click', () => router.push(`/place/${p.id}`));
+        markersRef.current.push(m);
+        latlngs.push([p.lat, p.lng]);
       });
-      const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
-      m.on('click', () => setSelected(p));
-      markersRef.current.push(m);
-      latlngs.push([p.lat, p.lng]);
-    });
-    if (latlngs.length > 0) {
-      map.fitBounds(latlngs, { padding: [50, 50], maxZoom: 15 });
+    if (!center && latlngs.length > 0) map.fitBounds(latlngs, { padding: [50, 50], maxZoom: 15 });
+  }, [places, ready, center, router]);
+
+  // 검색
+  async function handleSearch() {
+    const q = query.trim();
+    if (!q) return;
+    setSearching(true);
+    try {
+      const res = await searchKakao(q);
+      if (res.length === 0) {
+        setSearching(false);
+        return;
+      }
+      const k = res[0];
+      const lat = parseFloat(k.y);
+      const lng = parseFloat(k.x);
+      const label = k.place_name || k.address_name;
+      setCenter({ lat, lng, label });
+      const L = Lref.current;
+      const map = mapObj.current;
+      if (L && map) {
+        map.setView([lat, lng], 14);
+        if (centerMarkerRef.current) centerMarkerRef.current.remove();
+        const icon = L.divIcon({
+          className: 'airang-center',
+          html: `<div style="transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:#3B72DD;border:3px solid #fff;box-shadow:0 0 0 6px rgba(59,114,221,.25);"></div>`,
+          iconSize: [0, 0],
+        });
+        centerMarkerRef.current = L.marker([lat, lng], { icon }).addTo(map);
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setSearching(false);
     }
-  }, [places, ready]);
+  }
+
+  // 주변 장소 (검색 위치 기준 거리순)
+  const nearby = useMemo(() => {
+    if (!center) return [];
+    return places
+      .filter((p) => p.lat && p.lng)
+      .map((p) => ({ p, d: distMeters(center, { lat: p.lat, lng: p.lng }) }))
+      .sort((a, b) => a.d - b.d);
+  }, [center, places]);
 
   const hasPins = places.some((p) => p.lat && p.lng);
 
@@ -93,61 +150,107 @@ export default function MapPage() {
       <div style={{ flex: 1, position: 'relative', minHeight: 320 }}>
         <div ref={mapRef} style={{ position: 'absolute', inset: 0, background: '#e8eef0' }} />
 
-        {ready && !hasPins && (
+        {/* 검색창 */}
+        <div style={{ position: 'absolute', top: 12, left: 14, right: 14, zIndex: 1000 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: '#fff',
+              borderRadius: 13,
+              padding: '11px 13px',
+              boxShadow: '0 6px 18px -8px rgba(0,0,0,.35)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4-4" />
+            </svg>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="위치 검색 (예: 잠실역, 서울숲)"
+              style={{ flex: 1, fontSize: 14.5, fontWeight: 500, color: 'var(--text-primary)' }}
+            />
+            {searching && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>…</span>}
+            {center && (
+              <button onClick={() => { setCenter(null); setQuery(''); if (centerMarkerRef.current) centerMarkerRef.current.remove(); }} style={{ fontSize: 16, color: 'var(--placeholder)' }} aria-label="검색 해제">×</button>
+            )}
+          </div>
+        </div>
+
+        {ready && !hasPins && !center && (
           <div
             style={{
               position: 'absolute',
-              left: 16,
-              right: 16,
-              top: 16,
+              left: 14,
+              right: 14,
+              top: 70,
               background: 'rgba(255,255,255,.92)',
-              borderRadius: 14,
-              padding: '12px 14px',
+              borderRadius: 12,
+              padding: '10px 14px',
               textAlign: 'center',
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: 600,
               color: 'var(--text-secondary)',
-              boxShadow: '0 6px 16px -8px rgba(0,0,0,.3)',
+              zIndex: 999,
             }}
           >
-            📍 주소가 있는 장소를 추가하면 여기 핀으로 보여요
+            📍 주소가 있는 장소를 추가하면 핀으로 보여요
           </div>
         )}
 
-        {selected && (
-          <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, zIndex: 1000 }}>
-            <button
-              onClick={() => router.push(`/place/${selected.id}`)}
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                background: '#fff',
-                borderRadius: 18,
-                padding: 14,
-                boxShadow: '0 10px 30px -10px rgba(0,0,0,.4)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <CategoryBadge type={selected.category} />
-                <div style={{ fontSize: 16, fontWeight: 700, marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {selected.title}
-                </div>
-                <div style={{ fontSize: 12.5, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                  {selected.address || selected.region}
-                </div>
+        {/* 주변 장소 하단 시트 */}
+        {center && (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              maxHeight: '46%',
+              background: '#fff',
+              borderRadius: '20px 20px 0 0',
+              boxShadow: '0 -8px 24px -10px rgba(0,0,0,.3)',
+              zIndex: 1000,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div style={{ padding: '12px 18px 6px' }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 10px' }} />
+              <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+                {center.label} 주변 <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>{nearby.length}곳</span>
               </div>
-              <span style={{ fontSize: 20, color: 'var(--placeholder)' }}>›</span>
-            </button>
-            <button
-              onClick={() => setSelected(null)}
-              style={{ position: 'absolute', top: -10, right: -6, width: 26, height: 26, borderRadius: '50%', background: 'var(--text-tertiary)', color: '#fff', fontSize: 14, fontWeight: 700, zIndex: 1001 }}
-              aria-label="닫기"
-            >
-              ×
-            </button>
+            </div>
+            <div style={{ overflowY: 'auto', padding: '4px 14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {nearby.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, padding: '12px 4px' }}>
+                  주변에 등록된 장소가 없어요.
+                </div>
+              ) : (
+                nearby.map(({ p, d }) => (
+                  <button
+                    key={p.id}
+                    onClick={() => router.push(`/place/${p.id}`)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: 'var(--bg-card)', borderRadius: 14, padding: '11px 13px' }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <CategoryBadge type={p.category} />
+                      <div style={{ fontSize: 15, fontWeight: 700, marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                        {[p.region, p.age_target].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--brand)', flex: 'none' }}>{fmtDist(d)}</div>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>
