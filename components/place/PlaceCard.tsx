@@ -1,6 +1,6 @@
 'use client';
 
-// 장소 카드 (시안 02 기준) — 92px 썸네일 + 작은 카테고리 배지 + 제목 + 지역·연령 + 등록자·시간
+// 장소 카드 — 카테고리 배지 + 제목 + 지역·연령 + 등록자·시간 (썸네일 없음)
 import { useRouter } from 'next/navigation';
 import { category } from '@/styles/tokens';
 import { timeAgo } from '@/lib/age';
@@ -23,39 +23,18 @@ export default function PlaceCard({
     <button
       onClick={() => router.push(`/place/${place.id}`)}
       style={{
-        display: 'flex',
-        gap: 13,
+        display: 'block',
         width: '100%',
         textAlign: 'left',
         background: '#fff',
         border: '1px solid var(--border-light)',
         borderRadius: 22,
-        padding: 13,
+        padding: 15,
         boxShadow: '0 6px 20px -14px rgba(0,0,0,.45)',
       }}
     >
-      {/* 썸네일 — 카테고리 색조의 중립 이미지 자리 */}
-      <div
-        style={{
-          width: 92,
-          height: 92,
-          borderRadius: 16,
-          flex: 'none',
-          background: c.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c.text} strokeOpacity="0.45" strokeWidth="1.5">
-          <rect x="3" y="5" width="18" height="14" rx="2" />
-          <circle cx="9" cy="11" r="2" />
-          <path d="M21 17l-5-5-7 7" />
-        </svg>
-      </div>
-
       {/* 본문 */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ minWidth: 0 }}>
         <span
           style={{
             display: 'inline-flex',

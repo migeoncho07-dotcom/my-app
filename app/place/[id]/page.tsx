@@ -55,7 +55,6 @@ export default function PlaceDetailPage() {
     );
   }
 
-  const c = category[place.category] ?? category.etc;
   const hasCoord = place.lat && place.lng;
   const mapUrl = hasCoord
     ? `https://map.kakao.com/link/map/${encodeURIComponent(place.title)},${place.lat},${place.lng}`
@@ -66,31 +65,16 @@ export default function PlaceDetailPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 28 }}>
-      {/* 커버 */}
-      <div
-        style={{
-          height: 210,
-          background: c.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 72,
-          position: 'relative',
-        }}
-      >
-        {c.emoji}
+      {/* 상단 뒤로가기 */}
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 0' }}>
         <button
           onClick={() => router.back()}
           aria-label="뒤로"
           style={{
-            position: 'absolute',
-            top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-            left: 16,
             width: 38,
             height: 38,
             borderRadius: '50%',
-            background: 'rgba(255,255,255,.85)',
-            backdropFilter: 'blur(8px)',
+            background: 'var(--ios-material)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -103,7 +87,7 @@ export default function PlaceDetailPage() {
         </button>
       </div>
 
-      <div style={{ padding: '20px 20px 0' }}>
+      <div style={{ padding: '14px 20px 0' }}>
         <CategoryBadge type={place.category} size="md" />
         <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 12, lineHeight: 1.25 }}>
           {place.title}
