@@ -5,13 +5,20 @@ import { useAuth } from '@/lib/auth-context';
 import { subscribePlaces, subscribeMembers } from '@/lib/firestore';
 import { category } from '@/styles/tokens';
 import PlaceCard from '@/components/place/PlaceCard';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import type { Place, Member, Category } from '@/types';
 
 type FilterKey = 'all' | Category;
 
+// 시안 02의 세그먼트 컨트롤 (짧은 라벨, 가로 스크롤)
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
-  ...(Object.keys(category) as Category[]).map((k) => ({ key: k, label: category[k].label })),
+  { key: 'kids_cafe', label: '☕ 카페' },
+  { key: 'hotel', label: '🏨 호텔' },
+  { key: 'outdoor', label: '🌿 야외' },
+  { key: 'performance', label: '🎭 공연' },
+  { key: 'restaurant', label: '🍴 음식' },
+  { key: 'etc', label: '📦 기타' },
 ];
 
 export default function HomePage() {
@@ -23,7 +30,6 @@ export default function HomePage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
 
-  // 그룹 장소/멤버 실시간 구독
   useEffect(() => {
     if (!groupId) return;
     const unsubP = subscribePlaces(groupId, setPlaces);
@@ -34,104 +40,109 @@ export default function HomePage() {
     };
   }, [groupId]);
 
-  // uid → 닉네임 맵
-  const nameByUid = useMemo(() => {
-    const m: Record<string, string> = {};
-    members.forEach((mem) => (m[mem.uid] = mem.nickname));
+  const memberMap = useMemo(() => {
+    const m: Record<string, Member> = {};
+    members.forEach((mem) => (m[mem.uid] = mem));
     return m;
   }, [members]);
 
-  // 필터 + 검색 적용
   const visible = useMemo(() => {
     if (!places) return [];
     const q = search.trim().toLowerCase();
     return places.filter((p) => {
       if (filter !== 'all' && p.category !== filter) return false;
-      if (q && !(`${p.title} ${p.region} ${p.memo}`.toLowerCase().includes(q))) return false;
+      if (q && !`${p.title} ${p.region} ${p.memo}`.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [places, filter, search]);
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      {/* 라지 타이틀 */}
-      <div style={{ padding: '60px 20px 0' }}>
-        <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-0.03em' }}>
-          우리 아이랑 갈 곳
+      {/* 라지 타이틀 헤더 */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          padding: 'calc(env(safe-area-inset-top, 0px) + 22px) 22px 2px',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 2 }}>
+            오늘도 좋은 곳 찾아봐요
+          </div>
+          <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1 }}>
+            모아둔 곳
+          </div>
         </div>
-        <div style={{ fontSize: 13.5, color: 'var(--text-tertiary)', fontWeight: 500, marginTop: 6 }}>
-          {profile?.nickname ? `${profile.nickname}님의 공간` : ' '}
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: '50%',
+            flex: 'none',
+            background: profile?.avatar_color || '#FFD9CC',
+            border: '1px solid rgba(0,0,0,.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: 15,
+            fontWeight: 700,
+          }}
+        >
+          {profile?.nickname?.[0] ?? ''}
         </div>
       </div>
 
       {/* 검색 필드 */}
-      <div style={{ padding: '16px 20px 0' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            background: 'var(--ios-material)',
-            borderRadius: 12,
-            padding: '11px 14px',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2.2" strokeLinecap="round">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.2-3.2" />
-          </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="장소, 지역 검색"
-            style={{ flex: 1, fontSize: 15, fontWeight: 500, color: 'var(--text-primary)' }}
-          />
-        </div>
-      </div>
-
-      {/* 카테고리 필터 칩 (가로 스크롤) */}
       <div
         style={{
+          margin: '13px 22px 6px',
+          background: 'var(--ios-material)',
+          borderRadius: 11,
+          padding: '11px 13px',
           display: 'flex',
+          alignItems: 'center',
           gap: 8,
-          padding: '14px 20px 4px',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
         }}
       >
-        {FILTERS.map((f) => {
-          const active = filter === f.key;
-          return (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              style={{
-                flex: 'none',
-                borderRadius: 10,
-                padding: '8px 14px',
-                fontSize: 13,
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                background: active ? 'var(--brand)' : 'var(--ios-material)',
-                color: active ? '#fff' : 'var(--text-secondary)',
-                boxShadow: active ? '0 8px 16px -8px rgba(255,107,74,.5)' : 'none',
-              }}
-            >
-              {f.key !== 'all' && `${category[f.key as Category].emoji} `}
-              {f.label}
-            </button>
-          );
-        })}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.2" strokeLinecap="round">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4-4" />
+        </svg>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="장소 검색"
+          style={{ flex: 1, fontSize: 14.5, fontWeight: 400, color: 'var(--text-primary)' }}
+        />
       </div>
 
-      {/* 목록 / 빈 상태 */}
-      <div style={{ flex: 1, padding: '12px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* 세그먼트 컨트롤 */}
+      <div style={{ margin: '4px 22px 12px' }}>
+        <SegmentedControl
+          options={FILTERS}
+          value={filter}
+          onChange={(k) => setFilter(k as FilterKey)}
+        />
+      </div>
+
+      {/* 카드 목록 / 빈 상태 */}
+      <div style={{ flex: 1, padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 13 }}>
         {places === null ? (
           <Centered>불러오는 중…</Centered>
         ) : visible.length === 0 ? (
           <EmptyState hasAny={places.length > 0} />
         ) : (
-          visible.map((p) => <PlaceCard key={p.id} place={p} addedByName={nameByUid[p.added_by]} />)
+          visible.map((p) => (
+            <PlaceCard
+              key={p.id}
+              place={p}
+              addedByName={memberMap[p.added_by]?.nickname}
+              addedByColor={memberMap[p.added_by]?.avatar_color}
+            />
+          ))
         )}
       </div>
     </div>
@@ -156,13 +167,13 @@ function EmptyState({ hasAny }: { hasAny: boolean }) {
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        padding: '40px 20px',
+        padding: '50px 20px',
         gap: 10,
       }}
     >
       <div style={{ fontSize: 44 }}>🧸</div>
       <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-        {hasAny ? '조건에 맞는 장소가 없어요' : '아직 등록된 장소가 없어요'}
+        {hasAny ? '조건에 맞는 장소가 없어요' : '아직 모아둔 곳이 없어요'}
       </div>
       <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, lineHeight: 1.6 }}>
         {hasAny ? '검색어나 필터를 바꿔보세요.' : '아래 ＋ 버튼으로 첫 장소를 추가해 보세요.'}

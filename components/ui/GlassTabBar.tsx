@@ -19,7 +19,12 @@ function TabIcon({ name, active }: { name: TabKey; active: boolean }) {
   };
   switch (name) {
     case 'home':
-      return (
+      // 선택 시 채운 집 아이콘 (시안 02)
+      return active ? (
+        <svg width={23} height={23} viewBox="0 0 24 24" fill="var(--brand)" stroke="none">
+          <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
+        </svg>
+      ) : (
         <svg {...common}>
           <path d="M3 10.5 12 3l9 7.5" />
           <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
@@ -74,13 +79,13 @@ export default function GlassTabBar() {
         maxWidth: 430,
         zIndex: 50,
         background: 'rgba(248,248,250,.8)',
-        backdropFilter: 'blur(22px)',
-        WebkitBackdropFilter: 'blur(22px)',
-        borderTop: '0.5px solid var(--border)',
+        backdropFilter: 'saturate(180%) blur(22px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(22px)',
+        borderTop: '0.5px solid rgba(0,0,0,.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        padding: '8px 12px calc(8px + env(safe-area-inset-bottom))',
+        padding: '10px 10px calc(14px + env(safe-area-inset-bottom))',
       }}
     >
       {/* 홈 · 지도 */}
@@ -93,16 +98,16 @@ export default function GlassTabBar() {
         onClick={() => router.push('/add')}
         aria-label="장소 추가"
         style={{
-          width: 52,
-          height: 52,
+          width: 54,
+          height: 54,
           borderRadius: 18,
           background: 'var(--brand)',
           color: '#fff',
           fontSize: 28,
           fontWeight: 300,
           lineHeight: 1,
-          marginTop: -18,
-          boxShadow: '0 12px 24px -8px rgba(255,107,74,.6)',
+          marginTop: -20,
+          boxShadow: '0 12px 26px -8px rgba(255,107,74,.65)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
