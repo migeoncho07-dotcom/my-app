@@ -50,44 +50,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadProfile = useCallback(async (uid: string) => {
     try {
-      // 1) 인증 토큰
-      let token = '';
-      const cur = auth.currentUser;
-      if (cur) {
-        try {
-          token = await withTimeout(cur.getIdToken(), 8000);
-        } catch {
-          throw new Error('auth-token-timeout');
-        }
-      }
-      // 2) firestore.googleapis.com 에 '직접 REST' 호출 — 네트워크 자체가 막혔는지 확인
-      const pid = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-      try {
-        await withTimeout(
-          fetch(
-            `https://firestore.googleapis.com/v1/projects/${pid}/databases/(default)/documents/users/${uid}`,
-            token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-          ),
-          8000
-        );
-      } catch {
-        throw new Error('rest-fetch-timeout'); // 브라우저→firestore 네트워크가 막힘
-      }
-      // 3) Firebase SDK getDoc — 네트워크는 되는데 SDK 전송만 막히는지 확인
-      let p: User | null;
-      try {
-        p = await withTimeout(getUserProfile(uid), 8000);
-      } catch (e: any) {
-        throw new Error(e?.code ? `firestore:${e.code}` : 'sdk-getdoc-timeout');
-      }
+      // getUserProfile 내부에서 SDK/REST 동시 시도. 그래도 매달릴 때 대비 12초 타임아웃.
+      const p = await withTimeout(getUserProfile(uid), 12000);
       setProfile(p);
       setProfileError(false);
       setProfileErrorMsg('');
     } catch (e: any) {
+      const msg = `${e?.code ? e.code + ' · ' : ''}${e?.message || String(e)}`;
       console.error('[profile] load failed:', e);
       setProfile(null);
       setProfileError(true);
-      setProfileErrorMsg(e?.message || String(e));
+      setProfileErrorMsg(msg);
     }
   }, []);
 

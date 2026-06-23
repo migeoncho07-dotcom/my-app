@@ -12,7 +12,7 @@ import {
   query,
   orderBy,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import type { User, Place, Member, Category } from '@/types';
 
 // 아바타 색상 팔레트 (가입 시 고르거나 랜덤 배정)
@@ -74,11 +74,65 @@ export async function createUserWithNewGroup(params: {
   return groupId;
 }
 
-// 유저 프로필 조회 (없으면 null)
-export async function getUserProfile(uid: string): Promise<User | null> {
+// --- Firestore REST 파서 (SDK 전송이 막힌 환경 우회용) ---
+function restVal(f: any): any {
+  if (!f) return undefined;
+  if ('stringValue' in f) return f.stringValue;
+  if ('integerValue' in f) return Number(f.integerValue);
+  if ('doubleValue' in f) return f.doubleValue;
+  if ('booleanValue' in f) return f.booleanValue;
+  if ('timestampValue' in f) return f.timestampValue;
+  if ('nullValue' in f) return null;
+  if ('arrayValue' in f) return (f.arrayValue.values ?? []).map(restVal);
+  if ('mapValue' in f) {
+    const o: any = {};
+    const fields = f.mapValue.fields ?? {};
+    for (const k of Object.keys(fields)) o[k] = restVal(fields[k]);
+    return o;
+  }
+  return undefined;
+}
+
+async function getUserProfileViaRest(uid: string): Promise<User | null> {
+  const u = auth.currentUser;
+  if (!u) throw new Error('no-auth');
+  const token = await u.getIdToken();
+  const pid = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${pid}/databases/(default)/documents/users/${uid}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('rest-' + res.status);
+  const data = await res.json();
+  const f = data.fields;
+  if (!f) return null;
+  return {
+    uid,
+    email: restVal(f.email) ?? '',
+    nickname: restVal(f.nickname) ?? '',
+    avatar_color: restVal(f.avatar_color) ?? '',
+    kid_birthdays: restVal(f.kid_birthdays) ?? [],
+    group_id: restVal(f.group_id) ?? '',
+    created_at: null as any,
+  };
+}
+
+async function getUserProfileViaSdk(uid: string): Promise<User | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   if (!snap.exists()) return null;
   return { uid, ...(snap.data() as Omit<User, 'uid'>) };
+}
+
+// 유저 프로필 조회 — SDK와 REST를 동시에 시도해 먼저 되는 쪽 사용.
+// (일부 프로덕션 환경에서 SDK 전송이 매달리는 문제를 REST로 우회)
+export async function getUserProfile(uid: string): Promise<User | null> {
+  try {
+    return await Promise.any([getUserProfileViaSdk(uid), getUserProfileViaRest(uid)]);
+  } catch (e: any) {
+    // 둘 다 실패한 경우
+    throw e?.errors?.[0] ?? e;
+  }
 }
 
 // 장소를 그룹에 저장. 저장 시 added_by 는 반드시 본인(uid).
