@@ -27,6 +27,7 @@ interface AuthContextValue {
   profile: User | null;
   loading: boolean;
   profileError: boolean; // 프로필 '읽기 실패'(네트워크 등) — '프로필 없음'과 구분
+  profileErrorMsg: string; // 진단용 실제 에러 메시지
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState(false);
+  const [profileErrorMsg, setProfileErrorMsg] = useState('');
 
   const loadProfile = useCallback(async (uid: string) => {
     try {
@@ -52,11 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const p = await withTimeout(getUserProfile(uid), 12000);
       setProfile(p);
       setProfileError(false);
-    } catch {
+      setProfileErrorMsg('');
+    } catch (e: any) {
       // 읽기 자체가 실패(네트워크/타임아웃) → '프로필 없음'이 아니라 '에러'로 표시.
       // 가입 화면으로 보내 기존 데이터를 덮어쓰는 일을 막습니다.
+      const msg = `${e?.code ? e.code + ' · ' : ''}${e?.message || String(e)}`;
+      console.error('[profile] load failed:', e);
       setProfile(null);
       setProfileError(true);
+      setProfileErrorMsg(msg);
     }
   }, []);
 
@@ -89,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ firebaseUser, profile, loading, profileError, refreshProfile, signOut }}
+      value={{ firebaseUser, profile, loading, profileError, profileErrorMsg, refreshProfile, signOut }}
     >
       {children}
     </AuthContext.Provider>

@@ -10,7 +10,7 @@ import GlassTabBar from '@/components/ui/GlassTabBar';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { firebaseUser, profile, loading, profileError } = useAuth();
+  const { firebaseUser, profile, loading, profileError, profileErrorMsg } = useAuth();
 
   useEffect(() => {
     if (loading) return;
@@ -28,6 +28,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, lineHeight: 1.6 }}>
           네트워크 상태를 확인하고<br />다시 시도해 주세요.
         </div>
+        {profileErrorMsg && (
+          <div style={{ fontSize: 11, color: 'var(--brand-strong)', fontWeight: 600, background: 'var(--bg-card)', borderRadius: 10, padding: '8px 12px', maxWidth: 320, wordBreak: 'break-all', lineHeight: 1.5 }}>
+            오류: {profileErrorMsg}
+          </div>
+        )}
         <button
           onClick={() => window.location.reload()}
           style={{ marginTop: 6, background: 'var(--brand)', color: '#fff', borderRadius: 14, padding: '12px 22px', fontSize: 14, fontWeight: 700 }}
