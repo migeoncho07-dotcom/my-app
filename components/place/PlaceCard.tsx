@@ -17,7 +17,7 @@ export default function PlaceCard({
 }) {
   const router = useRouter();
   const c = category[place.category] ?? category.etc;
-  const when = timeAgo(place.added_at as unknown as { toMillis?: () => number });
+  const when = timeAgo(place.added_at);
 
   return (
     <button

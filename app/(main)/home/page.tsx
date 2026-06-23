@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { subscribePlaces, subscribeMembers } from '@/lib/firestore';
+import { fetchGroup } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import PlaceCard from '@/components/place/PlaceCard';
 import SegmentedControl from '@/components/ui/SegmentedControl';
@@ -30,15 +30,26 @@ export default function HomePage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
 
+  // 그룹 장소/멤버 — 서버 API 경유로 가져오고 8초마다 갱신(폴링)
   useEffect(() => {
-    if (!groupId) return;
-    const unsubP = subscribePlaces(groupId, setPlaces);
-    const unsubM = subscribeMembers(groupId, setMembers);
+    let alive = true;
+    async function load() {
+      try {
+        const d = await fetchGroup();
+        if (!alive) return;
+        setPlaces(d.places);
+        setMembers(d.members);
+      } catch {
+        if (alive) setPlaces((prev) => prev ?? []);
+      }
+    }
+    load();
+    const iv = setInterval(load, 8000);
     return () => {
-      unsubP();
-      unsubM();
+      alive = false;
+      clearInterval(iv);
     };
-  }, [groupId]);
+  }, []);
 
   const memberMap = useMemo(() => {
     const m: Record<string, Member> = {};

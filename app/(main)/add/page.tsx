@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { parseInput, searchKakao } from '@/lib/parse-client';
-import { addPlace } from '@/lib/firestore';
+import { savePlaceApi } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import Button from '@/components/ui/Button';
 import type { ParsedPlace, Category, KakaoPlace } from '@/types';
@@ -87,7 +87,7 @@ export default function AddPage() {
   }
 
   async function handleSave() {
-    if (!firebaseUser || !profile?.group_id) return;
+    if (!firebaseUser) return;
     const chosen = items.filter((it) => it.include);
     if (chosen.length === 0) return setError('저장할 장소를 한 개 이상 골라주세요.');
 
@@ -96,7 +96,7 @@ export default function AddPage() {
     try {
       const sourceText = tab === 'text' ? text : url;
       for (const it of chosen) {
-        await addPlace(profile.group_id, firebaseUser.uid, {
+        await savePlaceApi({
           title: it.title,
           category: it.category,
           region: it.region,

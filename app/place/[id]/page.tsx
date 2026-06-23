@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getPlace, getUserProfile } from '@/lib/firestore';
+import { fetchPlaceApi } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import { timeAgo } from '@/lib/age';
 import CategoryBadge from '@/components/ui/CategoryBadge';
@@ -22,29 +22,26 @@ export default function PlaceDetailPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!groupId) return;
     let alive = true;
     (async () => {
-      const p = await getPlace(groupId, id);
-      if (!alive) return;
-      if (!p) {
-        setState('notfound');
-        return;
-      }
-      setPlace(p);
-      setState('ready');
-      // 등록자 닉네임
       try {
-        const u = await getUserProfile(p.added_by);
-        if (alive && u) setAddedByName(u.nickname);
+        const { place: p, addedByName: name } = await fetchPlaceApi(id);
+        if (!alive) return;
+        if (!p) {
+          setState('notfound');
+          return;
+        }
+        setPlace(p);
+        setAddedByName(name);
+        setState('ready');
       } catch {
-        /* ignore */
+        if (alive) setState('notfound');
       }
     })();
     return () => {
       alive = false;
     };
-  }, [groupId, id, loading]);
+  }, [id, loading]);
 
   if (state === 'loading') {
     return <Centered>불러오는 중…</Centered>;

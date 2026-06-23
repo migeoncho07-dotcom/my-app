@@ -29,10 +29,13 @@ export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Firestore Timestamp(또는 toMillis 가진 값) → "방금 / N분 전 / N일 전" 표시
-export function timeAgo(ts: { toMillis?: () => number } | null | undefined): string {
-  if (!ts || typeof ts.toMillis !== 'function') return '';
-  const diff = Date.now() - ts.toMillis();
+// 밀리초(number) 또는 Firestore Timestamp → "방금 / N분 전 / N일 전" 표시
+export function timeAgo(ts: number | { toMillis?: () => number } | null | undefined): string {
+  let ms: number;
+  if (typeof ts === 'number') ms = ts;
+  else if (ts && typeof ts.toMillis === 'function') ms = ts.toMillis();
+  else return '';
+  const diff = Date.now() - ms;
   if (diff < 0) return '방금';
   const min = Math.floor(diff / 60000);
   if (min < 1) return '방금';

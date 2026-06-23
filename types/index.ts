@@ -44,7 +44,7 @@ export interface Place {
   ai_confidence: number; // 0~1, AI 추출 신뢰도
   kakao_place_id: string;
   added_by: string; // uid
-  added_at: Timestamp;
+  added_at: number | null; // 등록시각(밀리초). 서버 API가 millis 로 변환해 내려줌.
 }
 
 // users/{uid}

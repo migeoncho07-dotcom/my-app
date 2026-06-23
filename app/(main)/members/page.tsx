@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { subscribeMembers } from '@/lib/firestore';
+import { fetchGroup } from '@/lib/group-client';
 import { createInviteCode } from '@/lib/invite-client';
 import Button from '@/components/ui/Button';
 import type { Member } from '@/types';
@@ -19,9 +19,16 @@ export default function MembersPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!groupId) return;
-    return subscribeMembers(groupId, setMembers);
-  }, [groupId]);
+    let alive = true;
+    fetchGroup()
+      .then((d) => {
+        if (alive) setMembers(d.members);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function handleInvite() {
     setInviteError('');

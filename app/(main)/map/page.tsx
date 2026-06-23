@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { subscribePlaces } from '@/lib/firestore';
+import { fetchGroup } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import CategoryBadge from '@/components/ui/CategoryBadge';
 import type { Place } from '@/types';
@@ -49,11 +49,18 @@ export default function MapPage() {
   const [selected, setSelected] = useState<Place | null>(null);
   const [status, setStatus] = useState<'init' | 'ready' | 'nokey' | 'error'>('init');
 
-  // 장소 구독
+  // 장소 — 서버 API 경유로 가져오기
   useEffect(() => {
-    if (!groupId) return;
-    return subscribePlaces(groupId, setPlaces);
-  }, [groupId]);
+    let alive = true;
+    fetchGroup()
+      .then((d) => {
+        if (alive) setPlaces(d.places);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // 지도 초기화
   useEffect(() => {
