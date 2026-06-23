@@ -110,6 +110,16 @@ export async function addPlace(
   return ref.id;
 }
 
+// 단일 장소 조회 (없으면 null)
+export async function getPlace(
+  groupId: string,
+  placeId: string
+): Promise<Place | null> {
+  const snap = await getDoc(doc(db, 'groups', groupId, 'places', placeId));
+  if (!snap.exists()) return null;
+  return { id: placeId, ...(snap.data() as Omit<Place, 'id'>) };
+}
+
 // 그룹 장소 실시간 구독 (최신순). 해제 함수를 반환합니다.
 export function subscribePlaces(
   groupId: string,
