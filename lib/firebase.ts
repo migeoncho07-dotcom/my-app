@@ -4,7 +4,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,17 +21,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 
-// Firestore 를 long-polling 자동감지 모드로 초기화.
-// 일부 네트워크/브라우저에서 기본 WebChannel 연결이 막혀 getDoc 이 무한 대기하는
-// 문제를 방지합니다. 이미 초기화돼 있으면(HMR 등) 기존 인스턴스를 재사용합니다.
-function createDb() {
-  try {
-    // forceLongPolling: 막힌 네트워크/프록시/모바일망에서도 확실히 연결되도록 강제.
-    return initializeFirestore(app, { experimentalForceLongPolling: true });
-  } catch {
-    return getFirestore(app);
-  }
-}
-
-export const db = createDb();
+// 기본 Firestore 전송 모드 (로컬에서 정상 동작하는 모드).
+// long-polling 강제/자동감지가 일부 환경에서 getDoc 을 매달리게 해 제거.
+export const db = getFirestore(app);
 export default app;
