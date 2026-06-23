@@ -45,7 +45,7 @@ type EmailStatus = 'idle' | 'invalid' | 'checking' | 'available' | 'taken';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { firebaseUser, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { firebaseUser, profile, loading: authLoading, profileError, refreshProfile } = useAuth();
   const [step, setStep] = useState(0);
 
   // 입력값
@@ -69,13 +69,16 @@ export default function SignupPage() {
     initedRef.current = true;
     if (firebaseUser && profile) {
       router.replace('/home'); // 이미 가입 완료 → 홈
+    } else if (firebaseUser && profileError) {
+      // 프로필 '읽기 실패'면 신규로 오인하지 말고 홈으로(거기서 다시 시도 안내)
+      router.replace('/home');
     } else if (firebaseUser && !profile) {
-      // 계정만 만들고 프로필 미완 → 프로필 단계부터 이어서
+      // 계정만 만들고 프로필 미완(진짜 신규) → 프로필 단계부터 이어서
       setAccountUid(firebaseUser.uid);
       if (firebaseUser.email) setEmail(firebaseUser.email);
       setStep(2);
     }
-  }, [authLoading, firebaseUser, profile, router]);
+  }, [authLoading, firebaseUser, profile, profileError, router]);
 
   // 이메일 실시간 중복 체크 (입력 멈추면 0.5초 뒤 확인)
   useEffect(() => {

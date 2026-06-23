@@ -26,23 +26,37 @@ interface AuthContextValue {
   firebaseUser: FirebaseUser | null;
   profile: User | null;
   loading: boolean;
+  profileError: boolean; // 프로필 '읽기 실패'(네트워크 등) — '프로필 없음'과 구분
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ]);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState(false);
 
   const loadProfile = useCallback(async (uid: string) => {
     try {
-      const p = await getUserProfile(uid);
+      // 네트워크가 막혀 getDoc 이 무한 대기하는 경우를 대비해 12초 타임아웃
+      const p = await withTimeout(getUserProfile(uid), 12000);
       setProfile(p);
+      setProfileError(false);
     } catch {
+      // 읽기 자체가 실패(네트워크/타임아웃) → '프로필 없음'이 아니라 '에러'로 표시.
+      // 가입 화면으로 보내 기존 데이터를 덮어쓰는 일을 막습니다.
       setProfile(null);
+      setProfileError(true);
     }
   }, []);
 
@@ -75,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ firebaseUser, profile, loading, refreshProfile, signOut }}
+      value={{ firebaseUser, profile, loading, profileError, refreshProfile, signOut }}
     >
       {children}
     </AuthContext.Provider>
