@@ -49,13 +49,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // 로그인/로그아웃을 실시간 감지
     const unsub = onAuthStateChanged(auth, async (u) => {
-      setFirebaseUser(u);
       if (u) {
+        // 로그인 직후엔 프로필을 다 불러올 때까지 loading 을 유지해야
+        // "프로필 없음"으로 오인해 가입 화면으로 튕기지 않습니다.
+        setLoading(true);
+        setFirebaseUser(u);
         await loadProfile(u.uid);
+        setLoading(false);
       } else {
+        setFirebaseUser(null);
         setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsub;
   }, [loadProfile]);

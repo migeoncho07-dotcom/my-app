@@ -47,16 +47,34 @@ export default function AddPage() {
         setStep('input');
         return;
       }
-      setItems(
-        places.map((p) => ({
-          ...p,
-          include: true,
-          address: '',
-          lat: 0,
-          lng: 0,
-          kakao_place_id: '',
-        }))
+      // 제목+지역으로 카카오 주소를 자동 검색해 미리 채움 (여러 곳 병렬)
+      const enriched = await Promise.all(
+        places.map(async (p): Promise<EditablePlace> => {
+          let address = '';
+          let lat = 0;
+          let lng = 0;
+          let kakao_place_id = '';
+          let region = p.region;
+          try {
+            const cands = await searchKakao(p.title, p.region);
+            if (cands.length > 0) {
+              const k = cands[0];
+              address = k.road_address_name || k.address_name;
+              lat = parseFloat(k.y) || 0;
+              lng = parseFloat(k.x) || 0;
+              kakao_place_id = k.id;
+              // 지역이 비어 있으면 주소 앞부분(시/도 구/군)으로 채움
+              if (!region && k.address_name) {
+                region = k.address_name.split(' ').slice(0, 2).join(' ');
+              }
+            }
+          } catch {
+            /* 주소 자동검색 실패 시 그냥 빈 값으로 — 사용자가 직접 찾기 가능 */
+          }
+          return { ...p, region, include: true, address, lat, lng, kakao_place_id };
+        })
       );
+      setItems(enriched);
       setStep('review');
     } catch (e: any) {
       setError(e?.message || 'AI 정리에 실패했어요.');
