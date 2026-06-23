@@ -8,14 +8,23 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 function loadServiceAccount() {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  let raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (!raw) {
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY 환경변수가 설정되지 않았습니다.');
+  }
+  raw = raw.trim();
+  // JSON({…}) 이 아니면 base64 로 보고 디코드 (긴 JSON 이 붙여넣다 깨지는 문제 회피)
+  if (!raw.startsWith('{')) {
+    try {
+      raw = Buffer.from(raw, 'base64').toString('utf8');
+    } catch {
+      /* base64 가 아니면 그대로 둠 */
+    }
   }
   try {
     return JSON.parse(raw);
   } catch {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY 값이 올바른 JSON이 아닙니다.');
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY 값이 올바른 JSON/base64 가 아닙니다.');
   }
 }
 
