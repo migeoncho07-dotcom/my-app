@@ -7,3 +7,7 @@
 .env.local
 .DS_Store
 *.log
+
+# 자동 생성 파일 (커밋 불필요)
+next-env.d.ts
+*.tsbuildinfo

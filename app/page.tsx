@@ -1,21 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
-export default function Home() {
-  const [count, setCount] = useState(0);
+// 앱 진입점: 로그인 상태를 확인해서 알맞은 화면으로 보냅니다.
+export default function RootPage() {
+  const router = useRouter();
+  const { firebaseUser, loading } = useAuth();
 
+  useEffect(() => {
+    if (loading) return;
+    router.replace(firebaseUser ? '/home' : '/login');
+  }, [firebaseUser, loading, router]);
+
+  // 확인하는 동안 보여줄 간단한 스플래시
   return (
-    <main className="container">
-      <h1>🎉 내 앱이 실행됐어요!</h1>
-      <p>이 화면이 보이면 셋팅이 잘 된 거예요.</p>
-      <p>이제 클로드에게 "이 화면을 이렇게 바꿔줘"라고 말하면서 만들어 나가면 됩니다.</p>
-
-      <button onClick={() => setCount(count + 1)}>
-        눌러보기: {count}
-      </button>
-
-      <p className="hint">app/page.tsx 파일이 이 화면입니다.</p>
-    </main>
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+      }}
+    >
+      <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--brand)' }}>
+        아이랑
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500 }}>
+        불러오는 중…
+      </div>
+    </div>
   );
 }

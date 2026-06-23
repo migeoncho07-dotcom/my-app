@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// airang Firestore security rules
+// 1) signed-in users only  2) own group data only  3) invite codes server-only
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isGroupMember(groupId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    // users/{uid} : profile
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // groups/{groupId}
+    match /groups/{groupId} {
+      allow read: if isGroupMember(groupId);
+      allow create: if isSignedIn() && request.resource.data.created_by == request.auth.uid;
+      allow update, delete: if isGroupMember(groupId);
+
+      // members/{uid}
+      match /members/{memberId} {
+        allow read: if isGroupMember(groupId);
+        allow create, update, delete: if isSignedIn() && (request.auth.uid == memberId || isGroupMember(groupId));
+      }
+
+      // places/{placeId}
+      match /places/{placeId} {
+        allow read: if isGroupMember(groupId);
+        allow create: if isGroupMember(groupId) && request.resource.data.added_by == request.auth.uid;
+        allow update, delete: if isGroupMember(groupId);
+      }
+    }
+
+    // invite_codes/{code} : client access fully blocked (server Admin SDK only)
+    match /invite_codes/{code} {
+      allow read, write: if false;
+    }
+  }
+}

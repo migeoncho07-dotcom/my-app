@@ -1,36 +1,70 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* 아이랑 전역 스타일 — 애플 톤 (DESIGN.md 기준) */
+
+:root {
+  --brand: #FF6B4A;
+  --brand-strong: #E85C2E;
+  --bg: #EFEFF4;
+  --bg-card: #F5F5F7;
+  --text-primary: #1D1D1F;
+  --text-secondary: #636366;
+  --text-tertiary: #8E8E93;
+  --placeholder: #C7C7CC;
+  --border: #E5E5EA;
+  --border-light: #ECECF0;
+  --ios-material: rgba(118, 118, 128, 0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff;
-  min-height: 100vh;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 모바일 우선: 폰 폭(375px) 기준. 데스크톱에선 가운데 한 칼럼만 보이게. */
+.app-shell {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 
-.container {
-  text-align: center;
-  padding: 2rem;
-  max-width: 480px;
+/* 입력 요소 기본 리셋 */
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  border: none;
+  outline: none;
+  background: none;
 }
-
-h1 { font-size: 1.8rem; margin-bottom: 1rem; }
-p { margin-bottom: 0.8rem; line-height: 1.6; opacity: 0.95; }
 
 button {
-  margin-top: 1.5rem;
-  padding: 0.8rem 1.6rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 12px;
-  background: #fff;
-  color: #6366f1;
-  font-weight: 600;
   cursor: pointer;
 }
 
-button:active { transform: scale(0.97); }
-
-.hint { margin-top: 2rem; font-size: 0.85rem; opacity: 0.7; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
