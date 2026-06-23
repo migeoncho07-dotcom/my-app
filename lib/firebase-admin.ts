@@ -24,4 +24,17 @@ const app: App = getApps().length
   : initializeApp({ credential: cert(loadServiceAccount()) });
 
 export const adminAuth = getAuth(app);
-export const adminDb = getFirestore(app);
+
+// preferRest: 서버리스(Vercel)에서 Admin Firestore 가 gRPC 로 연결할 때 매달리는
+// 문제를 피하려고 REST 전송을 우선 사용. settings 는 최초 1회만 적용.
+function createAdminDb() {
+  const fs = getFirestore(app);
+  try {
+    fs.settings({ preferRest: true });
+  } catch {
+    /* 이미 설정/사용됨 — 무시 */
+  }
+  return fs;
+}
+
+export const adminDb = createAdminDb();
