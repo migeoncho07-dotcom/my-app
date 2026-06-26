@@ -77,7 +77,7 @@ export default function GlassTabBar() {
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: 430,
-        zIndex: 50,
+        zIndex: 1100,
         background: '#fff',
         borderTop: '1px solid #EDEDF0',
         display: 'flex',

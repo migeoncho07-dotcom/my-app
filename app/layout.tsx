@@ -26,7 +26,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  viewportFit: 'cover',
+  // viewport-fit: cover 는 콘텐츠를 화면 끝까지 늘려 하단 버튼이 시스템 바에 가려지므로 사용하지 않음
   themeColor: '#FF6B4A',
 };
 
