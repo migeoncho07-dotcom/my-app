@@ -43,8 +43,8 @@ export default function InputField({
           width: '100%',
           background: 'var(--surface)',
           borderRadius: 12,
-          padding: '15px 16px',
-          fontSize: 15,
+          padding: '16px 17px',
+          fontSize: 14.5,
           fontWeight: 500,
           color: 'var(--text-primary)',
           border: focused
