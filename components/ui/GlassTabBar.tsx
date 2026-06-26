@@ -98,16 +98,15 @@ export default function GlassTabBar() {
         onClick={() => router.push('/add')}
         aria-label="장소 추가"
         style={{
-          width: 54,
-          height: 54,
-          borderRadius: 18,
+          width: 52,
+          height: 52,
+          borderRadius: 14,
           background: 'var(--brand)',
           color: '#fff',
           fontSize: 28,
           fontWeight: 300,
           lineHeight: 1,
-          marginTop: -20,
-          boxShadow: '0 12px 26px -8px rgba(255,107,74,.65)',
+          marginTop: -18,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -145,10 +144,22 @@ function TabButton({
         flexDirection: 'column',
         alignItems: 'center',
         gap: 3,
-        padding: '2px 0',
+        padding: '5px 0',
       }}
     >
-      <TabIcon name={name} active={active} />
+      <div
+        style={{
+          padding: '3px 14px',
+          borderRadius: 9999,
+          background: active ? '#FFE3DA' : 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background .15s',
+        }}
+      >
+        <TabIcon name={name} active={active} />
+      </div>
       <span style={{ fontSize: 10.5, fontWeight: 600, color: active ? 'var(--brand)' : 'var(--text-tertiary)' }}>
         {label}
       </span>

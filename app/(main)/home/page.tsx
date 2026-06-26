@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
@@ -22,6 +23,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
   const { profile } = useAuth();
   const groupId = profile?.group_id;
 
@@ -87,11 +89,13 @@ export default function HomePage() {
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 2 }}>
             오늘도 좋은 곳 찾아봐요
           </div>
-          <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1 }}>
+          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
             모아둔 곳
           </div>
         </div>
-        <div
+        <button
+          onClick={() => router.push('/profile')}
+          aria-label="내 프로필"
           style={{
             width: 38,
             height: 38,
@@ -108,7 +112,7 @@ export default function HomePage() {
           }}
         >
           {profile?.nickname?.[0] ?? ''}
-        </div>
+        </button>
       </div>
 
       {/* 검색 필드 */}

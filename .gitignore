@@ -11,3 +11,6 @@
 # 자동 생성 파일 (커밋 불필요)
 next-env.d.ts
 *.tsbuildinfo
+
+# 디자인 참고 폴더 (커밋 제외)
+_design_v4/

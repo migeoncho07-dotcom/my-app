@@ -23,9 +23,9 @@ export default function Button({
       disabled={disabled}
       style={{
         width: fullWidth ? '100%' : undefined,
-        borderRadius: 16,
-        padding: '16px 18px',
-        fontSize: 15.5,
+        borderRadius: 14,
+        padding: '15px 18px',
+        fontSize: 15,
         fontWeight: 700,
         letterSpacing: '-0.01em',
         transition: 'transform .08s ease, opacity .15s ease',
@@ -34,10 +34,9 @@ export default function Button({
           ? {
               background: 'var(--brand)',
               color: '#fff',
-              boxShadow: '0 16px 32px -12px rgba(255,107,74,.55)',
             }
           : {
-              background: '#fff',
+              background: 'var(--surface)',
               color: 'var(--text-primary)',
               border: '1px solid var(--border)',
               fontWeight: 600,
@@ -45,7 +44,7 @@ export default function Button({
         ...style,
       }}
       onPointerDown={(e) => {
-        if (!disabled) e.currentTarget.style.transform = 'scale(0.97)';
+        if (!disabled) e.currentTarget.style.transform = 'scale(0.98)';
       }}
       onPointerUp={(e) => {
         e.currentTarget.style.transform = 'scale(1)';

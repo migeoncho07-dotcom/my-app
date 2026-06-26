@@ -19,7 +19,7 @@ export default function CategoryBadge({
         gap: 4,
         background: c.bg,
         color: c.text,
-        borderRadius: 9,
+        borderRadius: 7,
         padding: isMd ? '6px 11px' : '4px 8px',
         fontSize: isMd ? 12.5 : 11.5,
         fontWeight: 700,

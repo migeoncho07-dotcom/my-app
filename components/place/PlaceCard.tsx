@@ -26,11 +26,10 @@ export default function PlaceCard({
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        background: '#fff',
+        background: 'var(--surface)',
         border: '1px solid var(--border-light)',
-        borderRadius: 22,
+        borderRadius: 16,
         padding: 15,
-        boxShadow: '0 6px 20px -14px rgba(0,0,0,.45)',
       }}
     >
       {/* 본문 */}

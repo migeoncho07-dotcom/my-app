@@ -1,11 +1,13 @@
-// 디자인 토큰 — DESIGN.md / 시안(애플 톤 v2) 기준
-// 화면 코드에서 색상·카테고리를 여기서 가져다 씁니다.
+// 디자인 토큰 — 아이랑 v4 "코랄 refined" (DESIGN.md v4 기준)
+// v2 대비: 배경 #F5F5F7, 카테고리색 정제, 반경 축소, 버튼/카드 그림자 제거.
 
 export const colors = {
   brand: '#FF6B4A',
-  brandStrong: '#E85C2E',
-  bg: '#EFEFF4',
-  bgCard: '#F5F5F7',
+  brandStrong: '#E85C2E', // brand-press
+  brandTint: '#FFEDE7',
+  bg: '#F5F5F7',
+  surface: '#FFFFFF',
+  bgCard: '#FFFFFF',
   textPrimary: '#1D1D1F',
   textSecondary: '#636366',
   textTertiary: '#8E8E93',
@@ -15,28 +17,34 @@ export const colors = {
   iosMaterial: 'rgba(118,118,128,.12)',
 } as const;
 
-// 카테고리 6종 — 이모지/한글 라벨/글자색/배경색
-// key 는 types/index.ts 의 Category 와 동일해야 함
+// 카테고리 6종 — v4 정제된 색
 export const category = {
   kids_cafe:   { emoji: '☕', label: '키즈카페',  text: '#E85C2E', bg: '#FFEAE2' },
-  hotel:       { emoji: '🏨', label: '호텔/펜션', text: '#3B72DD', bg: '#E6EFFD' },
-  outdoor:     { emoji: '🌿', label: '야외장소',  text: '#1F9E57', bg: '#E2F5E8' },
-  performance: { emoji: '🎭', label: '공연/전시', text: '#8A4ED4', bg: '#F1E7FC' },
-  restaurant:  { emoji: '🍴', label: '음식점',    text: '#C7457A', bg: '#FBE7F0' },
-  etc:         { emoji: '📦', label: '기타',       text: '#847A6D', bg: '#EFEBE6' },
+  hotel:       { emoji: '🏨', label: '호텔/펜션', text: '#2E5DB0', bg: '#E6EFFD' },
+  outdoor:     { emoji: '🌿', label: '야외장소',  text: '#1C8049', bg: '#E2F5E8' },
+  performance: { emoji: '🎭', label: '공연/전시', text: '#7140B5', bg: '#F1E7FC' },
+  restaurant:  { emoji: '🍴', label: '음식점',    text: '#B23A68', bg: '#FBE7F0' },
+  etc:         { emoji: '📦', label: '기타',       text: '#6E6459', bg: '#EFEBE6' },
 } as const;
 
-// 모서리 반경
+// 반경 스케일 (v4)
 export const radius = {
-  card: 22,
-  button: 16,
-  field: 15,
+  xs: 7,    // 뱃지/작은 칩
+  sm: 12,   // 입력 필드
+  md: 14,   // 버튼
+  lg: 16,   // 카드, 리스트 그룹
+  xl: 20,   // 바텀시트 상단
+  // 하위 호환 별칭
+  card: 16,
+  button: 14,
+  field: 12,
   chip: 9,
 } as const;
 
-// 그림자
+// 그림자 (v4) — 버튼/카드 그림자 없음. 시트만 사용.
 export const shadow = {
-  card: '0 6px 20px -14px rgba(0,0,0,.45)',
+  card: 'none',
+  sheet: '0 -8px 24px -10px rgba(0,0,0,.18)',
 } as const;
 
 export type CategoryKey = keyof typeof category;

@@ -103,6 +103,21 @@ export default function PlaceDetailPage() {
     }
   }
 
+  async function shareIt() {
+    if (!place) return;
+    const text = `${place.title}${place.address ? '\n' + place.address : ''}`;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: place.title, text });
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        alert('장소 정보를 복사했어요');
+      }
+    } catch {
+      /* 사용자 취소 등 무시 */
+    }
+  }
+
   if (state === 'loading') return <Centered>불러오는 중…</Centered>;
   if (state === 'notfound' || !place) {
     return (
@@ -130,7 +145,23 @@ export default function PlaceDetailPage() {
           {editing ? '✕' : '←'}
         </button>
         {!editing ? (
-          <button onClick={startEdit} style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--brand)', padding: '8px 6px' }}>수정</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={shareIt} aria-label="공유"
+              style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                <path d="M12 16V4" />
+                <path d="M8 8l4-4 4 4" />
+              </svg>
+            </button>
+            <button onClick={startEdit} aria-label="수정"
+              style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </button>
+          </div>
         ) : (
           <button onClick={save} disabled={saving} style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--brand)', padding: '8px 6px' }}>
             {saving ? '저장 중…' : '완료'}

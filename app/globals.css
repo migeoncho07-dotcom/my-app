@@ -1,10 +1,13 @@
 /* 아이랑 전역 스타일 — 애플 톤 (DESIGN.md 기준) */
 
 :root {
+  /* 아이랑 v4 "코랄 refined" */
   --brand: #FF6B4A;
   --brand-strong: #E85C2E;
-  --bg: #EFEFF4;
-  --bg-card: #F5F5F7;
+  --brand-tint: #FFEDE7;
+  --bg: #F5F5F7;
+  --bg-card: #FFFFFF;
+  --surface: #FFFFFF;
   --text-primary: #1D1D1F;
   --text-secondary: #636366;
   --text-tertiary: #8E8E93;
