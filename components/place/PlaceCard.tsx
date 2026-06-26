@@ -1,6 +1,6 @@
 'use client';
 
-// 장소 카드 (시안 02) — 92px 썸네일 + 카테고리 배지 + 제목 + 지역·연령 + 등록자
+// 장소 카드 — 카테고리 배지 + 제목 + 지역·연령 + 등록자·시간 (썸네일 없음)
 import { useRouter } from 'next/navigation';
 import { category } from '@/styles/tokens';
 import { timeAgo } from '@/lib/age';
@@ -24,89 +24,59 @@ export default function PlaceCard({
       onClick={() => router.push(`/place/${place.id}`)}
       style={{
         display: 'flex',
-        gap: 13,
-        alignItems: 'stretch',
+        alignItems: 'center',
         width: '100%',
         textAlign: 'left',
         background: '#fff',
         border: '1px solid #ECECF0',
-        borderRadius: 16,
-        padding: 13,
+        borderRadius: 14,
+        padding: 0,
       }}
     >
-      {/* 썸네일 (카테고리 색 + 이모지) */}
-      <div
-        style={{
-          width: 92,
-          height: 92,
-          borderRadius: 16,
-          flex: 'none',
-          background: c.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 36,
-        }}
-      >
-        {c.emoji}
-      </div>
-
       {/* 본문 */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <span
-          style={{
-            alignSelf: 'flex-start',
-            background: c.bg,
-            color: c.text,
-            borderRadius: 7,
-            padding: '3px 9px',
-            fontSize: 11,
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
-            marginBottom: 7,
-          }}
-        >
-          {c.emoji} {c.label}
-        </span>
-        <div
-          style={{
-            fontSize: 16.5,
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-            lineHeight: 1.25,
-            color: '#1D1D1F',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {place.title}
-        </div>
-        <div style={{ fontSize: 12.5, color: '#8E8E93', fontWeight: 500, margin: '5px 0 9px' }}>
-          {[place.region, place.age_target].filter(Boolean).join(' · ')}
-        </div>
-        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div
+      <div style={{ flex: 1, minWidth: 0, padding: '11px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+          <span
             style={{
-              width: 18,
-              height: 18,
-              borderRadius: '50%',
               flex: 'none',
-              background: addedByColor || '#FFD9CC',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 9.5,
+              background: c.bg,
+              color: c.text,
+              borderRadius: 5,
+              padding: '2px 7px',
+              fontSize: 10,
               fontWeight: 700,
+              whiteSpace: 'nowrap',
             }}
           >
-            {addedByName?.[0] ?? ''}
-          </div>
-          <span style={{ fontSize: 11.5, color: '#8E8E93', fontWeight: 500 }}>
-            {[addedByName, when].filter(Boolean).join(' · ')}
+            {c.label}
+          </span>
+          <span
+            style={{
+              flex: 1,
+              fontSize: 15,
+              fontWeight: 700,
+              letterSpacing: '-0.01em',
+              color: '#1D1D1F',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {place.title}
           </span>
         </div>
+        <div style={{ fontSize: 12, color: '#636366', fontWeight: 500, marginBottom: 4 }}>
+          {[place.region, place.age_target].filter(Boolean).join(' · ')}
+        </div>
+        <div style={{ fontSize: 11, color: '#AEAEB2', fontWeight: 400 }}>
+          {[addedByName, when].filter(Boolean).join(' · ')}
+        </div>
+      </div>
+      {/* 오른쪽 화살표 */}
+      <div style={{ padding: '0 12px 0 4px', flex: 'none' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D2D2D7" strokeWidth="2">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </div>
     </button>
   );

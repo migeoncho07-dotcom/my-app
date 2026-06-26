@@ -11,7 +11,6 @@ import { completeSignup } from '@/lib/signup-client';
 import { category } from '@/styles/tokens';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/ui/InputField';
-import BrandMark from '@/components/ui/BrandMark';
 import type { Category } from '@/types';
 
 function authErrorMessage(code: string): string {
@@ -136,11 +135,7 @@ export default function SignupPage() {
 
       {step === 0 && (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 26 }}>
-            <BrandMark size={62} />
-            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 16 }}>놀잇터 시작하기</div>
-            <div style={{ fontSize: 13.5, color: 'var(--text-tertiary)', fontWeight: 500, marginTop: 7 }}>이메일과 비밀번호로 시작해요</div>
-          </div>
+          <Title t="이메일을 입력해요" s="로그인에 사용할 이메일이에요" />
           <InputField label="이메일" type="email" inputMode="email" autoComplete="email" placeholder="이메일 주소"
             value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && nextFromEmail()} />
           <EmailLine status={emailStatus} />
@@ -201,39 +196,25 @@ export default function SignupPage() {
 
       {step === 3 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ width: 88, height: 88, borderRadius: '50%', background: '#1F9E57', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 16px 32px -12px rgba(31,158,87,.55)' }}>
-            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-          </div>
-          <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 22, lineHeight: 1.25 }}>가입이<br />완료됐어요!</div>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#E2F5E8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34 }}>✅</div>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 20 }}>가입 완료!</div>
           <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.65, marginTop: 12 }}>이제 프로필만 꾸미면 끝이에요.</div>
-          <div style={{ width: '100%', marginTop: 22, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '13px 16px', textAlign: 'left' }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, flex: 'none', background: '#FFEAE2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="M3.5 6.5l8.5 6 8.5-6" /></svg>
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', fontWeight: 500, marginTop: 1 }}>이 이메일로 로그인해요</div>
-            </div>
-          </div>
-          <div style={{ width: '100%', marginTop: 30 }}><Button onClick={() => setStep(4)}>시작하기</Button></div>
+          <div style={{ marginTop: 18, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '13px 16px', fontSize: 13.5, fontWeight: 700 }}>{email}</div>
+          <div style={{ width: '100%', marginTop: 32 }}><Button onClick={() => setStep(4)}>시작하기</Button></div>
         </div>
       )}
 
       {step === 4 && (
         <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#E2F5E8', borderRadius: 12, padding: '11px 14px', marginBottom: 20 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C8049" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}><path d="M20 6L9 17l-5-5" /></svg>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1C8049' }}><b>가입이 완료됐어요</b> · 프로필만 정하면 끝!</div>
-          </div>
-          <Title t="어떻게 불러드릴까요?" s="다른 분들에게 보일 이름과 색이에요" />
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', margin: '0 4px 12px' }}>아바타 색</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 22 }}>
+          <Title t="프로필을 만들어요" s="이름과 색을 골라주세요" />
+          <InputField label="닉네임" placeholder="예: 지은맘" value={nickname} onChange={(e) => setNickname(e.target.value)} />
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', margin: '22px 4px 12px' }}>아바타 색</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
             {AVATAR_COLORS.map((c) => (
               <button key={c} onClick={() => setAvatar(c)} aria-label={`색상 ${c}`}
                 style={{ width: 44, height: 44, borderRadius: '50%', background: c, border: avatar === c ? '3px solid #fff' : '3px solid transparent', boxShadow: avatar === c ? `0 0 0 2px ${c}` : 'none', transition: 'box-shadow .15s' }} />
             ))}
           </div>
-          <InputField label="닉네임" placeholder="예) 지은맘, 현우엄마" value={nickname} onChange={(e) => setNickname(e.target.value)} />
           <Err e={error} />
           <Bottom>
             <Button onClick={() => { if (!nickname.trim()) return setError('닉네임을 입력해 주세요.'); setError(''); setStep(5); }}>다음</Button>
@@ -285,13 +266,10 @@ export default function SignupPage() {
 
       {step === 6 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ width: 88, height: 88, borderRadius: 26, background: 'linear-gradient(150deg, #FF6B4A, #E85C2E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, transform: 'rotate(-8deg)', boxShadow: '0 18px 36px -12px rgba(255,107,74,.6)', marginBottom: 24 }}>🎉</div>
-          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.25 }}><span style={{ color: 'var(--brand)' }}>{nickname}</span>님,<br />환영해요!</div>
+          <div style={{ fontSize: 56, marginBottom: 18 }}>🎉</div>
+          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em' }}>환영해요, {nickname}님!</div>
           <div style={{ fontSize: 14.5, color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.65, marginTop: 14 }}>이제 놀잇터를 쓸 수 있어요.<br />아이랑 갈 곳을 모아볼까요?</div>
-          <div style={{ width: '100%', marginTop: 36, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <Button onClick={() => router.replace('/home')}>둘러보기</Button>
-            <button onClick={() => router.replace('/add')} style={{ marginTop: 8, fontSize: 14, fontWeight: 700, color: 'var(--brand)', padding: 6 }}>＋ 첫 정보 추가하기</button>
-          </div>
+          <div style={{ width: '100%', marginTop: 36 }}><Button onClick={() => router.replace('/home')}>둘러보기</Button></div>
         </div>
       )}
     </div>
@@ -322,7 +300,7 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
 function Title({ t, s }: { t: string; s: string }) {
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.25 }}>{t}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.25 }}>{t}</div>
       <div style={{ fontSize: 13.5, color: 'var(--text-tertiary)', fontWeight: 500, marginTop: 7, wordBreak: 'break-all' }}>{s}</div>
     </div>
   );
