@@ -12,6 +12,18 @@ import type { Place, Category, KakaoPlace } from '@/types';
 
 const CATS = Object.keys(category) as Category[];
 
+const iconBox: React.CSSProperties = {
+  width: 40,
+  height: 40,
+  borderRadius: 12,
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: 'none',
+};
+
 interface Draft {
   title: string;
   category: Category;
@@ -138,32 +150,32 @@ export default function PlaceDetailPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 28 }}>
-      {/* 상단 바: 뒤로 + 수정/완료 */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={() => (editing ? setEditing(false) : router.back())} aria-label="뒤로"
-          style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--ios-material)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
-          {editing ? '✕' : '←'}
+      {/* 상단 헤더바 (시안 04): 뒤로 박스 · 타이틀 · 공유/편집 박스 */}
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 22px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button onClick={() => (editing ? setEditing(false) : router.back())} aria-label={editing ? '취소' : '뒤로'}
+          style={iconBox}>
+          {editing ? (
+            <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-secondary)' }}>✕</span>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="M11 5l-7 7 7 7" /></svg>
+          )}
         </button>
+        <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em' }}>{editing ? '편집' : '장소 상세'}</div>
         {!editing ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button onClick={shareIt} aria-label="공유"
-              style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-                <path d="M12 16V4" />
-                <path d="M8 8l4-4 4 4" />
+            <button onClick={shareIt} aria-label="공유" style={iconBox}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" />
               </svg>
             </button>
-            <button onClick={startEdit} aria-label="수정"
-              style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            <button onClick={startEdit} aria-label="수정" style={iconBox}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
               </svg>
             </button>
           </div>
         ) : (
-          <button onClick={save} disabled={saving} style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--brand)', padding: '8px 6px' }}>
+          <button onClick={save} disabled={saving} style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand)', padding: '8px 4px' }}>
             {saving ? '저장 중…' : '완료'}
           </button>
         )}
