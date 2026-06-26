@@ -48,20 +48,40 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ flex: 1, padding: '64px 24px 32px', display: 'flex', flexDirection: 'column' }}>
-      {/* 로고 / 타이틀 */}
-      <div style={{ marginBottom: 36 }}>
-        <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.03em' }}>아이랑</div>
+    <div style={{ flex: 1, padding: '24px 30px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      {/* 브랜드 로고 마크 + 타이틀 (v4) */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 42 }}>
         <div
           style={{
-            fontSize: 14.5,
-            color: 'var(--text-secondary)',
-            fontWeight: 500,
-            marginTop: 8,
-            lineHeight: 1.5,
+            width: 74,
+            height: 74,
+            borderRadius: 18,
+            background: 'var(--brand)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 16px 32px -10px rgba(255,107,74,.6)',
+            marginBottom: 20,
+            position: 'relative',
           }}
         >
-          우리 아이랑 갈 곳, 가족이랑 같이 모아요
+          <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#fff' }} />
+          <div
+            style={{
+              position: 'absolute',
+              width: 13,
+              height: 13,
+              borderRadius: '50%',
+              background: '#FFB59E',
+              right: 18,
+              bottom: 18,
+              border: '2px solid var(--brand)',
+            }}
+          />
+        </div>
+        <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.03em' }}>아이랑</div>
+        <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8, fontWeight: 500 }}>
+          엄마들이 모은 우리 아이 갈 곳
         </div>
       </div>
 
@@ -101,29 +121,35 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* 버튼 */}
-      <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* 로그인 버튼 */}
+      <div style={{ marginTop: 24 }}>
         <Button onClick={handleLogin} disabled={loading}>
           {loading ? '로그인 중…' : '로그인'}
         </Button>
-        <Link href="/signup" style={{ width: '100%' }}>
-          <Button variant="secondary">이메일로 가입하기</Button>
-        </Link>
       </div>
+
+      {/* 구분선 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '22px 0' }}>
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        <div style={{ fontSize: 12, color: 'var(--placeholder)', fontWeight: 500 }}>처음이세요?</div>
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      </div>
+
+      <Link href="/signup" style={{ width: '100%' }}>
+        <Button variant="secondary">이메일로 가입하기</Button>
+      </Link>
 
       <div
         style={{
           textAlign: 'center',
           fontSize: 12,
           color: 'var(--placeholder)',
-          marginTop: 'auto',
-          paddingTop: 28,
+          marginTop: 20,
           fontWeight: 500,
           lineHeight: 1.5,
         }}
       >
-        가입하면 나만의 공간이 만들어져요.<br />
-        친구는 초대 코드로 함께할 수 있어요.
+        가입을 마치려면 초대 코드가 필요해요
       </div>
     </div>
   );

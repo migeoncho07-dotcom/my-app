@@ -78,14 +78,12 @@ export default function GlassTabBar() {
         width: '100%',
         maxWidth: 430,
         zIndex: 50,
-        background: 'rgba(248,248,250,.8)',
-        backdropFilter: 'saturate(180%) blur(22px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(22px)',
-        borderTop: '0.5px solid rgba(0,0,0,.1)',
+        background: '#fff',
+        borderTop: '1px solid #EDEDF0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        padding: '10px 10px calc(14px + env(safe-area-inset-bottom))',
+        padding: '10px 10px calc(16px + env(safe-area-inset-bottom))',
       }}
     >
       {/* 홈 · 지도 */}
@@ -98,19 +96,20 @@ export default function GlassTabBar() {
         onClick={() => router.push('/add')}
         aria-label="장소 추가"
         style={{
-          width: 52,
-          height: 52,
+          width: 54,
+          height: 54,
           borderRadius: 14,
           background: 'var(--brand)',
           color: '#fff',
           fontSize: 28,
           fontWeight: 300,
           lineHeight: 1,
-          marginTop: -18,
+          marginTop: -20,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flex: 'none',
+          boxShadow: '0 12px 26px -8px rgba(255,107,74,.65)',
         }}
       >
         ＋
@@ -149,8 +148,8 @@ function TabButton({
     >
       <div
         style={{
-          padding: '3px 14px',
-          borderRadius: 9999,
+          padding: '3px 18px',
+          borderRadius: 12,
           background: active ? '#FFE3DA' : 'transparent',
           display: 'flex',
           alignItems: 'center',

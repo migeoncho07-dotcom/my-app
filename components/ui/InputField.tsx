@@ -50,7 +50,8 @@ export default function InputField({
           border: focused
             ? '1.5px solid var(--brand)'
             : '1px solid var(--border)',
-          transition: 'border-color .15s ease',
+          boxShadow: focused ? 'none' : '0 2px 8px -6px rgba(0,0,0,.25)',
+          transition: 'border-color .15s ease, box-shadow .15s ease',
           ...style,
         }}
         {...rest}

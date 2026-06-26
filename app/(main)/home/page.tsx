@@ -6,7 +6,6 @@ import { useAuth } from '@/lib/auth-context';
 import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import PlaceCard from '@/components/place/PlaceCard';
-import SegmentedControl from '@/components/ui/SegmentedControl';
 import type { Place, Member, Category } from '@/types';
 
 type FilterKey = 'all' | Category;
@@ -118,13 +117,13 @@ export default function HomePage() {
       {/* 검색 필드 */}
       <div
         style={{
-          margin: '13px 22px 6px',
-          background: 'var(--ios-material)',
-          borderRadius: 11,
-          padding: '11px 13px',
+          margin: '14px 22px 8px',
+          background: '#EAEAEE',
+          borderRadius: 14,
+          padding: '13px 18px',
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 10,
         }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.2" strokeLinecap="round">
@@ -135,21 +134,47 @@ export default function HomePage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="장소 검색"
-          style={{ flex: 1, fontSize: 14.5, fontWeight: 400, color: 'var(--text-primary)' }}
+          style={{ flex: 1, fontSize: 14.5, fontWeight: 400, color: 'var(--text-primary)', background: 'transparent' }}
         />
       </div>
 
-      {/* 세그먼트 컨트롤 */}
-      <div style={{ margin: '4px 22px 12px' }}>
-        <SegmentedControl
-          options={FILTERS}
-          value={filter}
-          onChange={(k) => setFilter(k as FilterKey)}
-        />
+      {/* 필터 칩 (v4 갤럭시 각진 — 선택 시 주황 채움) */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          padding: '2px 22px 14px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {FILTERS.map((f) => {
+          const on = filter === f.key;
+          return (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              style={{
+                flex: 'none',
+                whiteSpace: 'nowrap',
+                borderRadius: 13,
+                padding: on ? '8px 16px' : '8px 15px',
+                fontSize: 13,
+                fontWeight: on ? 600 : 500,
+                color: on ? '#fff' : '#444',
+                background: on ? 'var(--brand)' : '#fff',
+                border: on ? 'none' : '1px solid #E2E2E6',
+                transition: 'background .15s',
+              }}
+            >
+              {f.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* 카드 목록 / 빈 상태 */}
-      <div style={{ flex: 1, padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 13 }}>
+      <div style={{ flex: 1, padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {places === null ? (
           <Centered>불러오는 중…</Centered>
         ) : visible.length === 0 ? (
