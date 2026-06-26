@@ -8,13 +8,24 @@ import { parsePlaces } from '@/lib/claude';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-// HTML에서 사람이 읽는 텍스트만 대충 뽑아냄 (제목/메타 + 본문)
+// HTML에서 사람이 읽는 텍스트만 대충 뽑아냄 (제목/메타 + 구조화데이터 + 본문)
 function htmlToText(html: string): string {
   const pick = (re: RegExp) => (html.match(re)?.[1] ?? '').trim();
   const title = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  const ogTitle = pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
-  const desc = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
-  const ogDesc = pick(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+  // og: / twitter: 메타는 og:title 같은 순서가 뒤바뀐 경우도 있어 양방향으로 시도
+  const meta = (key: string) =>
+    pick(new RegExp(`<meta[^>]+(?:property|name)=["']${key}["'][^>]+content=["']([^"']+)["']`, 'i')) ||
+    pick(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${key}["']`, 'i'));
+  const ogTitle = meta('og:title');
+  const ogDesc = meta('og:description') || meta('description');
+  const ogSite = meta('og:site_name');
+
+  // 네이버/구글 등은 장소 정보를 JSON-LD(application/ld+json)에 담는 경우가 많음
+  const ldBlocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
+    .map((m) => m[1].trim())
+    .filter(Boolean)
+    .join('\n')
+    .slice(0, 4000);
 
   const body = html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -25,12 +36,18 @@ function htmlToText(html: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 
-  return [title, ogTitle, desc, ogDesc, body].filter(Boolean).join('\n').slice(0, 12000);
+  return [title, ogSite, ogTitle, ogDesc, ldBlocks, body].filter(Boolean).join('\n').slice(0, 12000);
 }
 
 async function fetchLinkText(url: string): Promise<string> {
+  // 진짜 모바일 브라우저처럼 요청해야 네이버/인스타가 실제 페이지를 돌려줌
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; airang/1.0)' },
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 13; SM-S918N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+    },
     redirect: 'follow',
   });
   if (!res.ok) throw new Error('fetch-failed');
@@ -70,7 +87,7 @@ export async function POST(req: NextRequest) {
       text = await fetchLinkText(url);
     } catch {
       return NextResponse.json(
-        { error: '링크를 읽지 못했어요. 내용을 복사해서 텍스트로 붙여넣어 주세요.' },
+        { error: '링크 내용을 가져오지 못했어요. 네이버·인스타 링크는 막혀 있는 경우가 많아요. 화면을 캡처해 사진 탭으로 올리거나, 글을 복사해 텍스트 탭에 붙여넣어 주세요.' },
         { status: 422 }
       );
     }
