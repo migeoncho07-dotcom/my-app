@@ -147,76 +147,131 @@ export default function PlaceDetailPage() {
   const routeUrl = hasCoord
     ? `https://map.kakao.com/link/to/${encodeURIComponent(place.title)},${place.lat},${place.lng}`
     : `https://map.kakao.com/link/search/${encodeURIComponent(place.address || place.title)}`;
+  const c = category[place.category] ?? category.etc;
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 28 }}>
-      {/* 상단 헤더바 (시안 04): 뒤로 박스 · 타이틀 · 공유/편집 박스 */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 22px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={() => (editing ? setEditing(false) : router.back())} aria-label={editing ? '취소' : '뒤로'}
-          style={iconBox}>
-          {editing ? (
-            <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-secondary)' }}>✕</span>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="M11 5l-7 7 7 7" /></svg>
-          )}
-        </button>
-        <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em' }}>{editing ? '편집' : '장소 상세'}</div>
-        {!editing ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button onClick={shareIt} aria-label="공유" style={iconBox}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" />
-              </svg>
-            </button>
-            <button onClick={startEdit} aria-label="수정" style={iconBox}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
-              </svg>
-            </button>
-          </div>
-        ) : (
-          <button onClick={save} disabled={saving} style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand)', padding: '8px 4px' }}>
-            {saving ? '저장 중…' : '완료'}
-          </button>
-        )}
-      </div>
-
-      {!editing ? (
-        /* ── 보기 ── */
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+      {editing ? (
+        /* ── 편집 ── */
         <>
-          <div style={{ padding: '14px 20px 0' }}>
-            <CategoryBadge type={place.category} size="md" />
-            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 12, lineHeight: 1.25 }}>{place.title}</div>
-            {place.region && <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500, marginTop: 6 }}>📍 {place.region}</div>}
+          <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 22px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button onClick={() => setEditing(false)} aria-label="취소" style={iconBox}>
+              <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-secondary)' }}>✕</span>
+            </button>
+            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em' }}>편집</div>
+            <button onClick={save} disabled={saving} style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand)', padding: '8px 4px' }}>
+              {saving ? '저장 중…' : '완료'}
+            </button>
           </div>
-
-          <div style={{ padding: '20px' }}>
-            <div style={{ background: '#fff', border: '1px solid var(--border-light)', borderRadius: 16, overflow: 'hidden' }}>
-              <InfoRow label="주소" value={place.address || '미입력'} />
-              <InfoRow label="운영기간" value={place.date_range || '—'} />
-              <InfoRow label="대상연령" value={place.age_target || '—'} />
-              <InfoRow label="메모" value={place.memo || '—'} />
-              <InfoRow label="등록" value={`${addedByName || '멤버'}${place.added_at ? ' · ' + timeAgo(place.added_at as any) : ''}`} last />
+          {draft && (
+            <EditForm draft={draft} setDraft={setDraft as (d: Draft) => void} onDelete={remove} deleting={deleting} />
+          )}
+        </>
+      ) : (
+        /* ── 보기 (시안 04) ── */
+        <>
+          {/* 커버 */}
+          <div style={{ position: 'relative', height: 236, flex: 'none', background: `linear-gradient(150deg, ${c.bg}, #FFE9E0)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 76 }}>{c.emoji}</div>
+            <button onClick={() => router.back()} aria-label="뒤로" style={{ ...floatBtn, position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', left: 16 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="M11 5l-7 7 7 7" /></svg>
+            </button>
+            <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', right: 16, display: 'flex', gap: 8 }}>
+              <button onClick={shareIt} aria-label="공유" style={floatBtn}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" /></svg>
+              </button>
+              <button onClick={startEdit} aria-label="수정" style={floatBtn}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" /></svg>
+              </button>
             </div>
           </div>
 
-          <div style={{ padding: '0 20px', display: 'flex', gap: 10 }}>
-            <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(false)}>🗺️ 지도에서 보기</div></a>
-            <a href={routeUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(true)}>🚗 길찾기</div></a>
+          {/* 내용 시트 (커버 위로 겹침) */}
+          <div style={{ flex: 1, marginTop: -26, background: 'var(--bg)', borderRadius: '28px 28px 0 0', position: 'relative', padding: '22px 20px 32px' }}>
+            <CategoryBadge type={place.category} size="md" />
+            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 12, lineHeight: 1.25 }}>{place.title}</div>
+
+            {/* 정보 카드 — 아이콘 행 */}
+            <div style={{ background: '#fff', border: '1px solid var(--border-light)', borderRadius: 16, padding: '4px 16px', marginTop: 18 }}>
+              <IconRow icon={<PinIcon />} main={place.address || '주소 미입력'} sub={place.region || undefined} />
+              <IconRow icon={<CalIcon />} main={place.date_range || '상시 운영'} divider />
+              {place.age_target && <IconRow icon={<PersonIcon />} main={`대상 연령 ${place.age_target}`} mainColor="#1C8049" divider />}
+            </div>
+
+            {/* 메모 카드 */}
+            {place.memo && (
+              <div style={{ background: '#FFF3EE', borderRadius: 16, padding: '14px 16px', marginTop: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#E85C2E', marginBottom: 6 }}>메모</div>
+                <div style={{ fontSize: 13.5, fontWeight: 500, color: '#5b544a', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{place.memo}</div>
+              </div>
+            )}
+
+            {/* 등록자 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, padding: '0 2px' }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', flex: 'none', background: '#FFD9CC', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>
+                {addedByName?.[0] ?? ''}
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{addedByName || '멤버'}님이 등록</div>
+                {place.added_at && <div style={{ fontSize: 11.5, color: '#8E8E93', fontWeight: 500, marginTop: 1 }}>{timeAgo(place.added_at as any)}</div>}
+              </div>
+            </div>
+
+            {/* 버튼 */}
+            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+              <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(false)}>지도에서 보기</div></a>
+              <a href={routeUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(true)}>길찾기</div></a>
+            </div>
           </div>
         </>
-      ) : (
-        /* ── 편집 ── */
-        draft && (
-          <EditForm
-            draft={draft}
-            setDraft={setDraft as (d: Draft) => void}
-            onDelete={remove}
-            deleting={deleting}
-          />
-        )
       )}
     </div>
+  );
+}
+
+const floatBtn: React.CSSProperties = {
+  width: 40,
+  height: 40,
+  borderRadius: '50%',
+  flex: 'none',
+  background: 'rgba(255,255,255,.92)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: '0 4px 12px -4px rgba(0,0,0,.3)',
+};
+
+function IconRow({ icon, main, sub, mainColor, divider }: { icon: React.ReactNode; main: string; sub?: string; mainColor?: string; divider?: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: divider ? '1px solid #F1ECE4' : 'none' }}>
+      <div style={{ flex: 'none' }}>{icon}</div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: mainColor || '#1D1D1F', lineHeight: 1.4, wordBreak: 'break-all' }}>{main}</div>
+        {sub && <div style={{ fontSize: 11.5, color: '#8E8E93', fontWeight: 500, marginTop: 2 }}>{sub}</div>}
+      </div>
+    </div>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21s-6-5.3-6-10a6 6 0 1 1 12 0c0 4.7-6 10-6 10Z" /><circle cx="12" cy="11" r="2.2" />
+    </svg>
+  );
+}
+function CalIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B72DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4.5" width="18" height="17" rx="2.5" /><path d="M3 9h18M8 2.5v4M16 2.5v4" />
+    </svg>
+  );
+}
+function PersonIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C8049" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="3.4" /><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+    </svg>
   );
 }
 
@@ -332,15 +387,6 @@ function btnStyle(primary: boolean): React.CSSProperties {
       ? { background: 'var(--brand)', color: '#fff', boxShadow: '0 12px 24px -12px rgba(255,107,74,.5)' }
       : { background: '#fff', color: 'var(--text-primary)', border: '1px solid var(--border)' }),
   };
-}
-
-function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
-  return (
-    <div style={{ display: 'flex', gap: 12, padding: '13px 16px', borderBottom: last ? 'none' : '1px solid var(--border-light)' }}>
-      <div style={{ width: 64, flex: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)' }}>{label}</div>
-      <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.5, wordBreak: 'break-all' }}>{value}</div>
-    </div>
-  );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {

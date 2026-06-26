@@ -7,8 +7,18 @@ import 'leaflet/dist/leaflet.css';
 import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { searchKakao } from '@/lib/parse-client';
 import { category } from '@/styles/tokens';
-import CategoryBadge from '@/components/ui/CategoryBadge';
-import type { Place } from '@/types';
+import type { Place, Category } from '@/types';
+
+type FilterKey = 'all' | Category;
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'kids_cafe', label: '☕ 카페' },
+  { key: 'hotel', label: '🏨 호텔' },
+  { key: 'outdoor', label: '🌿 야외' },
+  { key: 'performance', label: '🎭 공연' },
+  { key: 'restaurant', label: '🍴 음식' },
+  { key: 'etc', label: '📦 기타' },
+];
 
 function distMeters(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const R = 6371000;
@@ -37,6 +47,12 @@ export default function MapPage() {
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [center, setCenter] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [filter, setFilter] = useState<FilterKey>('all');
+
+  const visiblePlaces = useMemo(
+    () => places.filter((p) => filter === 'all' || p.category === filter),
+    [places, filter],
+  );
 
   useEffect(() => {
     let alive = true;
@@ -82,13 +98,14 @@ export default function MapPage() {
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
     const latlngs: [number, number][] = [];
-    places
+    visiblePlaces
       .filter((p) => p.lat && p.lng)
       .forEach((p) => {
         const c = category[p.category] ?? category.etc;
+        // 시안 05: 물방울(teardrop) 핀 — 흰 테두리, 끝이 아래를 향함
         const icon = L.divIcon({
           className: 'airang-pin',
-          html: `<div style="transform:translate(-50%,-100%);background:${c.text};color:#fff;border-radius:14px 14px 14px 2px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 10px -3px rgba(0,0,0,.4);">${c.emoji}</div>`,
+          html: `<div style="transform:translate(-50%,-100%);"><div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;background:${c.text};transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 6px 14px -4px rgba(0,0,0,.45);"><span style="transform:rotate(45deg);font-size:15px;line-height:1;">${c.emoji}</span></div></div>`,
           iconSize: [0, 0],
         });
         const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
@@ -97,7 +114,7 @@ export default function MapPage() {
         latlngs.push([p.lat, p.lng]);
       });
     if (!center && latlngs.length > 0) map.fitBounds(latlngs, { padding: [50, 50], maxZoom: 15 });
-  }, [places, ready, center, router]);
+  }, [visiblePlaces, ready, center, router]);
 
   // 검색
   async function handleSearch() {
@@ -138,12 +155,12 @@ export default function MapPage() {
   const RADIUS_M = 3000;
   const nearby = useMemo(() => {
     if (!center) return [];
-    return places
+    return visiblePlaces
       .filter((p) => p.lat && p.lng)
       .map((p) => ({ p, d: distMeters(center, { lat: p.lat, lng: p.lng }) }))
       .filter((x) => x.d <= RADIUS_M)
       .sort((a, b) => a.d - b.d);
-  }, [center, places]);
+  }, [center, visiblePlaces]);
 
   const hasPins = places.some((p) => p.lat && p.lng);
 
@@ -184,13 +201,53 @@ export default function MapPage() {
           </div>
         </div>
 
+        {/* 카테고리 필터 칩 (시안 05) */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(env(safe-area-inset-top, 0px) + 62px)',
+            left: 18,
+            right: 0,
+            zIndex: 999,
+            display: 'flex',
+            gap: 7,
+            overflowX: 'auto',
+            paddingRight: 18,
+            scrollbarWidth: 'none',
+          }}
+        >
+          {FILTERS.map((f) => {
+            const on = filter === f.key;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                style={{
+                  flex: 'none',
+                  whiteSpace: 'nowrap',
+                  borderRadius: 10,
+                  padding: on ? '7px 13px' : '7px 12px',
+                  fontSize: 12,
+                  fontWeight: on ? 600 : 500,
+                  color: on ? '#fff' : '#636366',
+                  background: on ? '#1D1D1F' : '#fff',
+                  border: on ? 'none' : '1px solid #E5E5EA',
+                  boxShadow: '0 4px 10px -6px rgba(0,0,0,.3)',
+                }}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+
         {ready && !hasPins && !center && (
           <div
             style={{
               position: 'absolute',
               left: 18,
               right: 18,
-              top: 'calc(env(safe-area-inset-top, 0px) + 72px)',
+              top: 'calc(env(safe-area-inset-top, 0px) + 110px)',
               background: 'rgba(255,255,255,.92)',
               borderRadius: 12,
               padding: '10px 14px',
@@ -223,35 +280,45 @@ export default function MapPage() {
             }}
           >
             <div style={{ padding: '12px 18px 6px' }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 10px' }} />
-              <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-                {center.label} 주변 <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>3km 이내 · {nearby.length}곳</span>
+              <div style={{ width: 42, height: 5, borderRadius: 2.5, background: '#E0E0E5', margin: '0 auto 12px' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em' }}>
+                  이 주변 <span style={{ color: 'var(--brand)' }}>{nearby.length}곳</span>
+                </div>
+                <div style={{ fontSize: 12, color: '#8E8E93', fontWeight: 500 }}>가까운 순</div>
               </div>
             </div>
-            <div style={{ overflowY: 'auto', padding: '4px 14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ overflowY: 'auto', padding: '4px 14px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {nearby.length === 0 ? (
                 <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, padding: '12px 4px' }}>
                   주변에 등록된 장소가 없어요.
                 </div>
               ) : (
-                nearby.map(({ p, d }) => (
-                  <button
-                    key={p.id}
-                    onClick={() => router.push(`/place/${p.id}`)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: 'var(--bg-card)', borderRadius: 14, padding: '11px 13px' }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <CategoryBadge type={p.category} />
-                      <div style={{ fontSize: 15, fontWeight: 700, marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {p.title}
+                nearby.map(({ p, d }) => {
+                  const c = category[p.category] ?? category.etc;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => router.push(`/place/${p.id}`)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left', padding: '9px 4px', borderBottom: '1px solid #EFEFF4' }}
+                    >
+                      <div style={{ width: 50, height: 50, borderRadius: 13, flex: 'none', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+                        {c.emoji}
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                        {[p.region, p.age_target].filter(Boolean).join(' · ')}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#8E8E93', marginTop: 2, fontWeight: 500 }}>
+                          {[c.label, p.age_target, fmtDist(d)].filter(Boolean).join(' · ')}
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--brand)', flex: 'none' }}>{fmtDist(d)}</div>
-                  </button>
-                ))
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" style={{ flex: 'none' }}>
+                        <path d="M9 6l6 6-6 6" />
+                      </svg>
+                    </button>
+                  );
+                })
               )}
             </div>
           </div>
