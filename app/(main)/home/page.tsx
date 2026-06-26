@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import PlaceCard from '@/components/place/PlaceCard';
+import ScreenHeader from '@/components/ui/ScreenHeader';
 import type { Place, Member, Category } from '@/types';
 
 type FilterKey = 'all' | Category;
@@ -76,43 +77,32 @@ export default function HomePage() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {/* 라지 타이틀 헤더 */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-          padding: 'calc(env(safe-area-inset-top, 0px) + 22px) 22px 2px',
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 2 }}>
-            오늘도 좋은 곳 찾아봐요
-          </div>
-          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            모아둔 곳
-          </div>
-        </div>
-        <button
-          onClick={() => router.push('/profile')}
-          aria-label="내 프로필"
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            flex: 'none',
-            background: profile?.avatar_color || '#FFD9CC',
-            border: '1px solid rgba(0,0,0,.06)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: 15,
-            fontWeight: 700,
-          }}
-        >
-          {profile?.nickname?.[0] ?? ''}
-        </button>
-      </div>
+      <ScreenHeader
+        subtitle="오늘도 좋은 곳 찾아봐요"
+        title="모아둔 곳"
+        right={
+          <button
+            onClick={() => router.push('/profile')}
+            aria-label="내 프로필"
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              flex: 'none',
+              background: profile?.avatar_color || '#FFD9CC',
+              border: '1px solid rgba(0,0,0,.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: 15,
+              fontWeight: 700,
+            }}
+          >
+            {profile?.nickname?.[0] ?? ''}
+          </button>
+        }
+      />
 
       {/* 검색 필드 */}
       <div
