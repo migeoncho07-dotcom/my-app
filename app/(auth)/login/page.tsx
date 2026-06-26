@@ -7,6 +7,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/ui/InputField';
+import BrandMark from '@/components/ui/BrandMark';
 
 // Firebase 에러 코드를 한글 안내로 변환
 function authErrorMessage(code: string): string {
@@ -51,33 +52,8 @@ export default function LoginPage() {
     <div style={{ flex: 1, padding: '24px 30px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       {/* 브랜드 로고 마크 + 타이틀 (v4) */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 42 }}>
-        <div
-          style={{
-            width: 74,
-            height: 74,
-            borderRadius: 18,
-            background: 'var(--brand)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 16px 32px -10px rgba(255,107,74,.6)',
-            marginBottom: 20,
-            position: 'relative',
-          }}
-        >
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#fff' }} />
-          <div
-            style={{
-              position: 'absolute',
-              width: 13,
-              height: 13,
-              borderRadius: '50%',
-              background: '#FFB59E',
-              right: 18,
-              bottom: 18,
-              border: '2px solid var(--brand)',
-            }}
-          />
+        <div style={{ marginBottom: 20 }}>
+          <BrandMark size={74} />
         </div>
         <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.03em' }}>놀잇터</div>
         <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8, fontWeight: 500 }}>
