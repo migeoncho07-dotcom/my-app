@@ -8,6 +8,7 @@ import { savePlaceApi } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import Button from '@/components/ui/Button';
 import ScreenHeader from '@/components/ui/ScreenHeader';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 import type { ParsedPlace, Category, KakaoPlace } from '@/types';
 
 type Step = 'input' | 'loading' | 'review' | 'done';
@@ -287,7 +288,7 @@ function DirectForm({ draft, setDraft }: { draft: DirectDraft; setDraft: (d: Dir
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {CATS.map((c) => {
             const on = draft.category === c;
-            return <button key={c} onClick={() => up({ category: c })} style={{ borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, background: on ? category[c].bg : 'var(--ios-material)', color: on ? category[c].text : 'var(--text-tertiary)' }}>{category[c].emoji} {category[c].label}</button>;
+            return <button key={c} onClick={() => up({ category: c })} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, background: on ? category[c].bg : 'var(--ios-material)', color: on ? category[c].text : 'var(--text-tertiary)' }}><CategoryIcon type={c} size={12} /> {category[c].label}</button>;
           })}
         </div>
       </Lbl>
@@ -419,7 +420,7 @@ function PlaceEditCard({ item, onChange }: { item: EditablePlace; onChange: (pat
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {CATS.map((c) => {
           const active = item.category === c;
-          return <button key={c} onClick={() => onChange({ category: c })} style={{ borderRadius: 8, padding: '5px 9px', fontSize: 11.5, fontWeight: 700, background: active ? category[c].bg : 'var(--ios-material)', color: active ? category[c].text : 'var(--text-tertiary)' }}>{category[c].emoji} {category[c].label}</button>;
+          return <button key={c} onClick={() => onChange({ category: c })} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 8, padding: '5px 9px', fontSize: 11.5, fontWeight: 700, background: active ? category[c].bg : 'var(--ios-material)', color: active ? category[c].text : 'var(--text-tertiary)' }}><CategoryIcon type={c} size={12} /> {category[c].label}</button>;
         })}
       </div>
 

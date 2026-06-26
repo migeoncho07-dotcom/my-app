@@ -8,6 +8,7 @@ import { searchKakao } from '@/lib/parse-client';
 import { category } from '@/styles/tokens';
 import { timeAgo } from '@/lib/age';
 import CategoryBadge from '@/components/ui/CategoryBadge';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 import type { Place, Category, KakaoPlace } from '@/types';
 
 const CATS = Object.keys(category) as Category[];
@@ -280,8 +281,8 @@ function EditForm({
             const on = draft.category === c;
             return (
               <button key={c} onClick={() => up({ category: c })}
-                style={{ borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, background: on ? category[c].bg : 'var(--ios-material)', color: on ? category[c].text : 'var(--text-tertiary)' }}>
-                {category[c].emoji} {category[c].label}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, background: on ? category[c].bg : 'var(--ios-material)', color: on ? category[c].text : 'var(--text-tertiary)' }}>
+                <CategoryIcon type={c} size={12} /> {category[c].label}
               </button>
             );
           })}

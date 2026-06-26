@@ -1,5 +1,6 @@
-// 카테고리 배지 — 이모지 + 한글 라벨, 카테고리별 색
+// 카테고리 배지 — 라인 아이콘 + 한글 라벨, 카테고리별 색 (시안 v4)
 import { category } from '@/styles/tokens';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 import type { Category } from '@/types';
 
 export default function CategoryBadge({
@@ -27,7 +28,7 @@ export default function CategoryBadge({
         whiteSpace: 'nowrap',
       }}
     >
-      <span>{c.emoji}</span>
+      <CategoryIcon type={type} size={isMd ? 14 : 12} />
       {c.label}
     </span>
   );
