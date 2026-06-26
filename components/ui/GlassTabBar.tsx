@@ -78,10 +78,8 @@ export default function GlassTabBar() {
         width: '100%',
         maxWidth: 430,
         zIndex: 50,
-        background: 'rgba(248,248,250,.8)',
-        backdropFilter: 'saturate(180%) blur(22px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(22px)',
-        borderTop: '.5px solid rgba(0,0,0,.1)',
+        background: '#fff',
+        borderTop: '1px solid #EDEDF0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
@@ -100,7 +98,7 @@ export default function GlassTabBar() {
         style={{
           width: 54,
           height: 54,
-          borderRadius: 18,
+          borderRadius: 14,
           background: 'var(--brand)',
           color: '#fff',
           fontSize: 28,
@@ -148,10 +146,20 @@ function TabButton({
         padding: '5px 0',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          padding: '3px 18px',
+          borderRadius: 12,
+          background: active ? '#FFE3DA' : 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background .15s',
+        }}
+      >
         <TabIcon name={name} active={active} />
       </div>
-      <span style={{ fontSize: 10, fontWeight: active ? 600 : 500, color: active ? 'var(--brand)' : 'var(--text-tertiary)' }}>
+      <span style={{ fontSize: 10.5, fontWeight: 600, color: active ? 'var(--brand)' : 'var(--text-tertiary)' }}>
         {label}
       </span>
     </button>

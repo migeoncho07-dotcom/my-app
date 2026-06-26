@@ -164,7 +164,7 @@ export default function AddPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      {step !== 'done' && <ScreenHeader title="정보 추가" />}
+      {step !== 'done' && <ScreenHeader title="장소 추가" />}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px', minHeight: 0 }}>
         {step === 'input' && (

@@ -42,7 +42,7 @@ export default function InputField({
         style={{
           width: '100%',
           background: 'var(--surface)',
-          borderRadius: 14,
+          borderRadius: 12,
           padding: '15px 16px',
           fontSize: 15,
           fontWeight: 500,
