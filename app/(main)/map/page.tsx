@@ -7,17 +7,18 @@ import 'leaflet/dist/leaflet.css';
 import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { searchKakao } from '@/lib/parse-client';
 import { category } from '@/styles/tokens';
+import CategoryIcon, { categoryIconHtml } from '@/components/ui/CategoryIcon';
 import type { Place, Category } from '@/types';
 
 type FilterKey = 'all' | Category;
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'kids_cafe', label: '☕ 카페' },
-  { key: 'hotel', label: '🏨 호텔' },
-  { key: 'outdoor', label: '🌿 야외' },
-  { key: 'performance', label: '🎭 공연' },
-  { key: 'restaurant', label: '🍴 음식' },
-  { key: 'etc', label: '📦 기타' },
+  { key: 'kids_cafe', label: '카페' },
+  { key: 'hotel', label: '호텔' },
+  { key: 'outdoor', label: '야외' },
+  { key: 'performance', label: '공연' },
+  { key: 'restaurant', label: '음식' },
+  { key: 'etc', label: '기타' },
 ];
 
 function distMeters(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -105,7 +106,7 @@ export default function MapPage() {
         // 시안 05: 물방울(teardrop) 핀 — 흰 테두리, 끝이 아래를 향함
         const icon = L.divIcon({
           className: 'airang-pin',
-          html: `<div style="transform:translate(-50%,-100%);"><div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;background:${c.text};transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 6px 14px -4px rgba(0,0,0,.45);"><span style="transform:rotate(45deg);font-size:15px;line-height:1;">${c.emoji}</span></div></div>`,
+          html: `<div style="transform:translate(-50%,-100%);"><div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;background:${c.text};transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 6px 14px -4px rgba(0,0,0,.45);"><span style="transform:rotate(45deg);line-height:0;">${categoryIconHtml(p.category, '#fff', 15)}</span></div></div>`,
           iconSize: [0, 0],
         });
         const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
@@ -224,6 +225,9 @@ export default function MapPage() {
                 onClick={() => setFilter(f.key)}
                 style={{
                   flex: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
                   whiteSpace: 'nowrap',
                   borderRadius: 10,
                   padding: on ? '7px 13px' : '7px 12px',
@@ -235,6 +239,7 @@ export default function MapPage() {
                   boxShadow: '0 4px 10px -6px rgba(0,0,0,.3)',
                 }}
               >
+                {f.key !== 'all' && <CategoryIcon type={f.key} size={13} />}
                 {f.label}
               </button>
             );
@@ -302,8 +307,8 @@ export default function MapPage() {
                       onClick={() => router.push(`/place/${p.id}`)}
                       style={{ display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left', padding: '9px 4px', borderBottom: '1px solid #EFEFF4' }}
                     >
-                      <div style={{ width: 50, height: 50, borderRadius: 12, flex: 'none', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
-                        {c.emoji}
+                      <div style={{ width: 50, height: 50, borderRadius: 12, flex: 'none', background: c.bg, color: c.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CategoryIcon type={p.category} size={22} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -7,19 +7,20 @@ import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import PlaceCard from '@/components/place/PlaceCard';
 import ScreenHeader from '@/components/ui/ScreenHeader';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 import type { Place, Member, Category } from '@/types';
 
 type FilterKey = 'all' | Category;
 
-// 시안 02의 세그먼트 컨트롤 (짧은 라벨, 가로 스크롤)
+// 시안 v4 필터 칩 — 라인 아이콘 + 짧은 라벨 (이모지 아님)
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'kids_cafe', label: '☕ 카페' },
-  { key: 'hotel', label: '🏨 호텔' },
-  { key: 'outdoor', label: '🌿 야외' },
-  { key: 'performance', label: '🎭 공연' },
-  { key: 'restaurant', label: '🍴 음식' },
-  { key: 'etc', label: '📦 기타' },
+  { key: 'kids_cafe', label: '카페' },
+  { key: 'hotel', label: '호텔' },
+  { key: 'outdoor', label: '야외' },
+  { key: 'performance', label: '공연' },
+  { key: 'restaurant', label: '음식' },
+  { key: 'etc', label: '기타' },
 ];
 
 export default function HomePage() {
@@ -146,6 +147,9 @@ export default function HomePage() {
               onClick={() => setFilter(f.key)}
               style={{
                 flex: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
                 whiteSpace: 'nowrap',
                 borderRadius: 13,
                 padding: on ? '8px 16px' : '8px 15px',
@@ -157,6 +161,7 @@ export default function HomePage() {
                 transition: 'background .15s',
               }}
             >
+              {f.key !== 'all' && <CategoryIcon type={f.key} size={14} />}
               {f.label}
             </button>
           );

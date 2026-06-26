@@ -12,6 +12,7 @@ import { category } from '@/styles/tokens';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/ui/InputField';
 import BrandMark from '@/components/ui/BrandMark';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 import type { Category } from '@/types';
 
 function authErrorMessage(code: string): string {
@@ -254,7 +255,7 @@ export default function SignupPage() {
                 <button key={c} onClick={() => setInterests((prev) => on ? prev.filter((x) => x !== c) : [...prev, c])}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 12, padding: '10px 14px', fontSize: 14, fontWeight: 700,
                     background: on ? 'var(--brand)' : 'var(--surface)', color: on ? '#fff' : 'var(--text-secondary)', border: on ? 'none' : '1.5px solid var(--border)' }}>
-                  {category[c].emoji} {category[c].label} {on && '✓'}
+                  <CategoryIcon type={c} size={14} /> {category[c].label} {on && '✓'}
                 </button>
               );
             })}
