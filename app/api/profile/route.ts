@@ -35,6 +35,9 @@ export async function GET(req: NextRequest) {
         nickname: d.nickname ?? '',
         avatar_color: d.avatar_color ?? '',
         kid_birthdays: d.kid_birthdays ?? [],
+        kid_ages: d.kid_ages ?? [],
+        interests: d.interests ?? [],
+        neighborhood: d.neighborhood ?? '',
         group_id: d.group_id ?? '',
       },
     });

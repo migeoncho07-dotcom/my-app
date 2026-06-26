@@ -53,7 +53,10 @@ export interface User {
   email: string;
   nickname: string;
   avatar_color: string;
-  kid_birthdays: string[]; // 생년월일 'YYYY-MM-DD' 배열 (나이는 이 값으로 계산)
+  kid_birthdays: string[]; // 생년월일 'YYYY-MM-DD' 배열 (레거시)
+  kid_ages?: number[]; // 아이 나이(살) 태그 — 가입 ⑤단계
+  interests?: Category[]; // 관심 카테고리 — 홈 추천 정렬
+  neighborhood?: string; // 우리 동네
   group_id: string; // MVP: 1인 1그룹 (나중에 배열로 확장 가능)
   created_at: Timestamp;
 }
