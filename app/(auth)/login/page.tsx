@@ -51,12 +51,12 @@ export default function LoginPage() {
   return (
     <div style={{ flex: 1, padding: '24px 30px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       {/* 브랜드 로고 마크 + 타이틀 (v4) */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 42 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 46 }}>
         <div style={{ marginBottom: 20 }}>
           <BrandMark size={74} />
         </div>
         <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.03em' }}>놀잇터</div>
-        <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8, fontWeight: 500 }}>
+        <div style={{ fontSize: 14, color: 'var(--text-tertiary)', marginTop: 8, fontWeight: 500 }}>
           엄마들이 모은 우리 아이 갈 곳
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
 
       {/* 비밀번호 찾기 */}
       <div style={{ textAlign: 'right', marginTop: 12 }}>
-        <Link href="/forgot" style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-tertiary)' }}>
+        <Link href="/forgot" style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)' }}>
           비밀번호를 잊으셨나요?
         </Link>
       </div>

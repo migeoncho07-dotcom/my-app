@@ -34,7 +34,7 @@ export default function PlaceCard({
       }}
     >
       {/* 본문 */}
-      <div style={{ flex: 1, minWidth: 0, padding: '11px 14px' }}>
+      <div style={{ flex: 1, minWidth: 0, padding: '10px 13px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
           <span
             style={{

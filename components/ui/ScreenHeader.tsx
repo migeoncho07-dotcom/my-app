@@ -5,7 +5,7 @@
 // 디자인 시안 v2의 large-title(27px / 800 / -0.035em)을 따른다.
 import type { ReactNode } from 'react';
 
-export const HEADER_PAD_TOP = 'calc(env(safe-area-inset-top, 0px) + 22px)';
+export const HEADER_PAD_TOP = 'calc(env(safe-area-inset-top, 0px) + 14px)';
 
 export default function ScreenHeader({
   title,
@@ -22,7 +22,7 @@ export default function ScreenHeader({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-end',
-        padding: `${HEADER_PAD_TOP} 22px 0`,
+        padding: `${HEADER_PAD_TOP} 22px 2px`,
       }}
     >
       <div>
@@ -31,7 +31,7 @@ export default function ScreenHeader({
             {subtitle}
           </div>
         )}
-        <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1 }}>
+        <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.06 }}>
           {title}
         </div>
       </div>
