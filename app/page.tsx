@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import BrandMark from '@/components/ui/BrandMark';
 
 // 앱 진입점: 로그인 상태를 확인해서 알맞은 화면으로 보냅니다.
 export default function RootPage() {
@@ -23,10 +24,11 @@ export default function RootPage() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
+        gap: 14,
       }}
     >
-      <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--brand)' }}>
+      <BrandMark size={68} />
+      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--brand)', marginTop: 4 }}>
         놀잇터
       </div>
       <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500 }}>
