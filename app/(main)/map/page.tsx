@@ -149,13 +149,12 @@ export default function MapPage() {
 
   return (
     <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '60px 20px 12px', fontSize: 27, fontWeight: 800, letterSpacing: '-0.03em' }}>지도</div>
-
+      {/* 디자인 시안 05: 지도는 타이틀 없이 꽉 차고, 검색창이 지도 위에 떠 있음 */}
       <div style={{ flex: 1, position: 'relative', minHeight: 320 }}>
         <div ref={mapRef} style={{ position: 'absolute', inset: 0, background: '#e8eef0' }} />
 
-        {/* 검색창 */}
-        <div style={{ position: 'absolute', top: 12, left: 14, right: 14, zIndex: 1000 }}>
+        {/* 검색창 (상태바/노치 아래에 띄움) */}
+        <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 18, right: 18, zIndex: 1000 }}>
           <div
             style={{
               display: 'flex',
@@ -189,9 +188,9 @@ export default function MapPage() {
           <div
             style={{
               position: 'absolute',
-              left: 14,
-              right: 14,
-              top: 70,
+              left: 18,
+              right: 18,
+              top: 'calc(env(safe-area-inset-top, 0px) + 72px)',
               background: 'rgba(255,255,255,.92)',
               borderRadius: 12,
               padding: '10px 14px',

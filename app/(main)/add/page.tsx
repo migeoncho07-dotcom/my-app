@@ -7,6 +7,7 @@ import { parseInput, searchKakao } from '@/lib/parse-client';
 import { savePlaceApi } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import Button from '@/components/ui/Button';
+import ScreenHeader from '@/components/ui/ScreenHeader';
 import type { ParsedPlace, Category, KakaoPlace } from '@/types';
 
 type Step = 'input' | 'loading' | 'review' | 'done';
@@ -162,24 +163,26 @@ export default function AddPage() {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '60px 20px 0' }}>
-      {step !== 'done' && <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.03em' }}>장소 추가</div>}
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      {step !== 'done' && <ScreenHeader title="장소 추가" />}
 
-      {step === 'input' && (
-        <InputStep
-          tab={tab} setTab={setTab} text={text} setText={setText} url={url} setUrl={setUrl}
-          image={image} setImage={setImage} direct={direct} setDirect={setDirect}
-          error={error} onParse={handleParse} onDirectSave={handleDirectSave} saving={saving}
-        />
-      )}
-      {step === 'loading' && <LoadingStep />}
-      {step === 'review' && (
-        <ReviewStep
-          items={items} update={update} toggleAll={toggleAll} error={error} saving={saving}
-          onSave={handleSave} onBack={() => { setStep('input'); setError(''); }}
-        />
-      )}
-      {step === 'done' && <DoneStep count={savedCount} onHome={() => router.push('/home')} onMore={continueAdd} />}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px', minHeight: 0 }}>
+        {step === 'input' && (
+          <InputStep
+            tab={tab} setTab={setTab} text={text} setText={setText} url={url} setUrl={setUrl}
+            image={image} setImage={setImage} direct={direct} setDirect={setDirect}
+            error={error} onParse={handleParse} onDirectSave={handleDirectSave} saving={saving}
+          />
+        )}
+        {step === 'loading' && <LoadingStep />}
+        {step === 'review' && (
+          <ReviewStep
+            items={items} update={update} toggleAll={toggleAll} error={error} saving={saving}
+            onSave={handleSave} onBack={() => { setStep('input'); setError(''); }}
+          />
+        )}
+        {step === 'done' && <DoneStep count={savedCount} onHome={() => router.push('/home')} onMore={continueAdd} />}
+      </div>
     </div>
   );
 }

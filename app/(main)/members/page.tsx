@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { createInviteCode } from '@/lib/invite-client';
 import Button from '@/components/ui/Button';
+import ScreenHeader from '@/components/ui/ScreenHeader';
 import type { Member } from '@/types';
 
 export default function MembersPage() {
@@ -58,12 +59,7 @@ export default function MembersPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '60px 20px 0', fontSize: 27, fontWeight: 800, letterSpacing: '-0.03em' }}>
-        멤버
-      </div>
-      <div style={{ fontSize: 13.5, color: 'var(--text-tertiary)', fontWeight: 500, padding: '6px 20px 0' }}>
-        함께 장소를 모으는 사람들이에요
-      </div>
+      <ScreenHeader title="멤버" subtitle="함께 장소를 모으는 사람들이에요" />
 
       <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {members.map((m) => (

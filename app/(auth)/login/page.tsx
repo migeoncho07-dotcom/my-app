@@ -79,7 +79,7 @@ export default function LoginPage() {
             }}
           />
         </div>
-        <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.03em' }}>아이랑</div>
+        <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.03em' }}>놀잇터</div>
         <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8, fontWeight: 500 }}>
           엄마들이 모은 우리 아이 갈 곳
         </div>

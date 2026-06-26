@@ -268,7 +268,7 @@ export default function SignupPage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
           <div style={{ fontSize: 56, marginBottom: 18 }}>🎉</div>
           <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em' }}>환영해요, {nickname}님!</div>
-          <div style={{ fontSize: 14.5, color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.65, marginTop: 14 }}>이제 아이랑을 쓸 수 있어요.<br />아이랑 갈 곳을 모아볼까요?</div>
+          <div style={{ fontSize: 14.5, color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.65, marginTop: 14 }}>이제 놀잇터를 쓸 수 있어요.<br />아이랑 갈 곳을 모아볼까요?</div>
           <div style={{ width: '100%', marginTop: 36 }}><Button onClick={() => router.replace('/home')}>둘러보기</Button></div>
         </div>
       )}

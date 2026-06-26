@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { ageLabel } from '@/lib/age';
 import Button from '@/components/ui/Button';
+import ScreenHeader from '@/components/ui/ScreenHeader';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -18,9 +19,7 @@ export default function ProfilePage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '60px 20px 0', fontSize: 27, fontWeight: 800, letterSpacing: '-0.03em' }}>
-        나
-      </div>
+      <ScreenHeader title="나" />
 
       {/* 프로필 카드 */}
       <div style={{ padding: '20px' }}>
