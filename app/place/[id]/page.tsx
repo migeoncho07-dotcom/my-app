@@ -149,7 +149,7 @@ export default function PlaceDetailPage() {
     : `https://map.kakao.com/link/search/${encodeURIComponent(place.address || place.title)}`;
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 28 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {/* 상단 헤더바 (시안 04): 뒤로 박스 · 타이틀 · 공유/편집 박스 */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 22px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => (editing ? setEditing(false) : router.back())} aria-label={editing ? '취소' : '뒤로'}
@@ -182,27 +182,44 @@ export default function PlaceDetailPage() {
       </div>
 
       {!editing ? (
-        /* ── 보기 ── */
+        /* ── 보기 (시안 04) ── */
         <>
-          <div style={{ padding: '14px 20px 0' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 22px' }}>
             <CategoryBadge type={place.category} size="md" />
-            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 12, lineHeight: 1.25 }}>{place.title}</div>
-            {place.region && <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500, marginTop: 6 }}>📍 {place.region}</div>}
-          </div>
+            <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: '-0.03em', margin: '11px 0 14px', lineHeight: 1.25 }}>{place.title}</div>
 
-          <div style={{ padding: '20px' }}>
-            <div style={{ background: '#fff', border: '1px solid var(--border-light)', borderRadius: 16, overflow: 'hidden' }}>
-              <InfoRow label="주소" value={place.address || '미입력'} />
-              <InfoRow label="운영기간" value={place.date_range || '—'} />
-              <InfoRow label="대상연령" value={place.age_target || '—'} />
-              <InfoRow label="메모" value={place.memo || '—'} />
-              <InfoRow label="등록" value={`${addedByName || '멤버'}${place.added_at ? ' · ' + timeAgo(place.added_at as any) : ''}`} last />
+            {/* 정보 카드 — 아이콘 행 */}
+            <div style={{ background: '#fff', border: '1px solid #ECECF0', borderRadius: 14, padding: '4px 16px', boxShadow: '0 6px 20px -16px rgba(0,0,0,.5)' }}>
+              <IconRow icon={<PinIcon />} main={place.address || '주소 미입력'} sub={place.region || undefined} />
+              <IconRow icon={<CalIcon />} main={place.date_range || '상시 운영'} divider />
+              {place.age_target && (
+                <IconRow icon={<PersonIcon />} main={<>대상 연령 <span style={{ color: '#1F9E57' }}>{place.age_target}</span></>} divider />
+              )}
+            </div>
+
+            {/* 메모 카드 */}
+            {place.memo && (
+              <div style={{ background: '#FFF3EE', borderRadius: 13, padding: 15, marginTop: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#E85C2E', marginBottom: 7 }}>메모</div>
+                <div style={{ fontSize: 13.5, fontWeight: 500, color: '#5b544a', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{place.memo}</div>
+              </div>
+            )}
+
+            {/* 등록자 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '14px 2px 0' }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', flex: 'none', background: '#FFD9CC', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>
+                {addedByName?.[0] ?? ''}
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{addedByName || '멤버'}님이 등록</div>
+                {place.added_at && <div style={{ fontSize: 11.5, color: '#8E8E93', fontWeight: 500, marginTop: 1 }}>{timeAgo(place.added_at as any)}</div>}
+              </div>
             </div>
           </div>
 
-          <div style={{ padding: '0 20px', display: 'flex', gap: 10 }}>
-            <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(false)}>🗺️ 지도에서 보기</div></a>
-            <a href={routeUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(true)}>🚗 길찾기</div></a>
+          <div style={{ padding: '14px 22px 26px', display: 'flex', gap: 9 }}>
+            <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(false)}>지도에서 보기</div></a>
+            <a href={routeUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(true)}>길찾기</div></a>
           </div>
         </>
       ) : (
@@ -324,23 +341,35 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function btnStyle(primary: boolean): React.CSSProperties {
   return {
     textAlign: 'center',
-    borderRadius: 16,
-    padding: '15px',
-    fontSize: 14.5,
-    fontWeight: 700,
+    borderRadius: 14,
+    padding: '16px',
+    fontSize: 14,
+    fontWeight: primary ? 700 : 600,
     ...(primary
-      ? { background: 'var(--brand)', color: '#fff', boxShadow: '0 12px 24px -12px rgba(255,107,74,.5)' }
+      ? { background: 'var(--brand)', color: '#fff', boxShadow: '0 14px 30px -12px rgba(255,107,74,.6)' }
       : { background: '#fff', color: 'var(--text-primary)', border: '1px solid var(--border)' }),
   };
 }
 
-function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+function IconRow({ icon, main, sub, divider }: { icon: React.ReactNode; main: React.ReactNode; sub?: string; divider?: boolean }) {
   return (
-    <div style={{ display: 'flex', gap: 12, padding: '13px 16px', borderBottom: last ? 'none' : '1px solid var(--border-light)' }}>
-      <div style={{ width: 64, flex: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)' }}>{label}</div>
-      <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.5, wordBreak: 'break-all' }}>{value}</div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: divider ? '1px solid #f5efe6' : 'none' }}>
+      <div style={{ flex: 'none' }}>{icon}</div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#1D1D1F', lineHeight: 1.4, wordBreak: 'break-all' }}>{main}</div>
+        {sub && <div style={{ fontSize: 11.5, color: '#8E8E93', fontWeight: 500, marginTop: 2 }}>{sub}</div>}
+      </div>
     </div>
   );
+}
+function PinIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF6B4A" strokeWidth="2"><path d="M12 21s-6-5.3-6-10a6 6 0 1112 0c0 4.7-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg>;
+}
+function CalIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3B72DD" strokeWidth="2"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>;
+}
+function PersonIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1F9E57" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-3.5 3.6-6 8-6s8 2.5 8 6" /></svg>;
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
