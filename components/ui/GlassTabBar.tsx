@@ -6,22 +6,22 @@ import { usePathname, useRouter } from 'next/navigation';
 type TabKey = 'home' | 'map' | 'members' | 'profile';
 
 function TabIcon({ name, active }: { name: TabKey; active: boolean }) {
-  const color = active ? 'var(--brand)' : 'var(--text-tertiary)';
+  // 디자인 원본: 비활성 #C7C7CC / 굵기 1.8 / 23px, 활성은 브랜드색
   const common = {
-    width: 24,
-    height: 24,
+    width: 23,
+    height: 23,
     viewBox: '0 0 24 24',
     fill: 'none',
-    stroke: color,
-    strokeWidth: 2,
+    stroke: active ? 'var(--brand)' : '#C7C7CC',
+    strokeWidth: 1.8,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
   };
   switch (name) {
     case 'home':
-      // 선택 시 채운 집 아이콘 (시안 02)
+      // 선택 시 채운 집 아이콘 (원본 22px)
       return active ? (
-        <svg width={23} height={23} viewBox="0 0 24 24" fill="var(--brand)" stroke="none">
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="var(--brand)" stroke="none">
           <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
         </svg>
       ) : (
@@ -34,22 +34,23 @@ function TabIcon({ name, active }: { name: TabKey; active: boolean }) {
       return (
         <svg {...common}>
           <path d="M12 21s-6-5.3-6-10a6 6 0 1 1 12 0c0 4.7-6 10-6 10Z" />
-          <circle cx="12" cy="11" r="2.2" />
+          <circle cx="12" cy="11" r="2" />
         </svg>
       );
     case 'members':
       return (
         <svg {...common}>
           <circle cx="9" cy="8" r="3" />
-          <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-          <path d="M16 3.5a3 3 0 0 1 0 5.8M21 20c0-2.6-1.6-4.8-3.9-5.6" />
+          <circle cx="17" cy="9" r="2.4" />
+          <path d="M3 19c0-3 2.7-5 6-5s6 2 6 5" />
+          <path d="M15.5 14c2.5 0 4.5 1.7 4.5 4.2" />
         </svg>
       );
     case 'profile':
       return (
         <svg {...common}>
-          <circle cx="12" cy="8" r="3.4" />
-          <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+          <circle cx="12" cy="8" r="3.2" />
+          <path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" />
         </svg>
       );
   }
@@ -83,7 +84,7 @@ export default function GlassTabBar() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        padding: '10px 10px calc(16px + env(safe-area-inset-bottom))',
+        padding: '12px 6px calc(16px + env(safe-area-inset-bottom))',
       }}
     >
       {/* 홈 · 지도 */}
@@ -91,7 +92,7 @@ export default function GlassTabBar() {
         <TabButton key={t.key} name={t.key} label={t.label} active={isActive(t.path)} onClick={() => router.push(t.path)} />
       ))}
 
-      {/* 중앙 ＋ */}
+      {/* 중앙 ＋ (원본: SVG 라인 플러스) */}
       <button
         onClick={() => router.push('/add')}
         aria-label="장소 추가"
@@ -101,9 +102,6 @@ export default function GlassTabBar() {
           borderRadius: 14,
           background: 'var(--brand)',
           color: '#fff',
-          fontSize: 28,
-          fontWeight: 300,
-          lineHeight: 1,
           marginTop: -20,
           display: 'flex',
           alignItems: 'center',
@@ -112,7 +110,9 @@ export default function GlassTabBar() {
           boxShadow: '0 12px 26px -8px rgba(255,107,74,.65)',
         }}
       >
-        ＋
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
       </button>
 
       {/* 멤버 · 나 */}
@@ -138,28 +138,24 @@ function TabButton({
     <button
       onClick={onClick}
       style={{
-        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 3,
-        padding: '5px 0',
+        gap: active ? 4 : 5,
+        background: 'none',
+        border: 'none',
+        padding: '0 6px',
       }}
     >
-      <div
-        style={{
-          padding: '3px 18px',
-          borderRadius: 12,
-          background: active ? '#FFE3DA' : 'transparent',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'background .15s',
-        }}
-      >
-        <TabIcon name={name} active={active} />
-      </div>
-      <span style={{ fontSize: 10.5, fontWeight: 600, color: active ? 'var(--brand)' : 'var(--text-tertiary)' }}>
+      {active ? (
+        // 활성: 연한 브랜드 알약 배경 (원본)
+        <div style={{ background: '#FFE3DA', borderRadius: 14, padding: '3px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <TabIcon name={name} active />
+        </div>
+      ) : (
+        <TabIcon name={name} active={false} />
+      )}
+      <span style={{ fontSize: active ? 10.5 : 10, fontWeight: active ? 700 : 500, color: active ? 'var(--brand)' : '#8E8E93' }}>
         {label}
       </span>
     </button>

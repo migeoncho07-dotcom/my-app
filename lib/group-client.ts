@@ -1,7 +1,8 @@
 // 클라이언트에서 그룹 데이터(장소·멤버)를 서버 API 경유로 가져오는 헬퍼.
 // 브라우저 Firestore SDK 가 일부 환경에서 막히는 문제를 우회.
 import { auth } from './firebase';
-import type { Place, Member } from '@/types';
+import type { Place, Member, Rating } from '@/types';
+import type { RatingInput } from './ratings';
 
 async function token(): Promise<string> {
   const u = auth.currentUser;
@@ -76,13 +77,33 @@ export async function savePlaceApi(data: Record<string, unknown>): Promise<{ id:
 
 export async function fetchPlaceApi(
   id: string
-): Promise<{ place: Place | null; addedByName: string }> {
+): Promise<{ place: Place | null; addedByName: string; ratings: Rating[]; myRating: Rating | null }> {
   const res = await fetch(`/api/place/${id}`, {
     headers: { Authorization: `Bearer ${await token()}` },
   });
-  if (res.status === 404) return { place: null, addedByName: '' };
+  if (res.status === 404) return { place: null, addedByName: '', ratings: [], myRating: null };
   if (!res.ok) throw new Error('place-' + res.status);
-  return res.json();
+  const json = await res.json();
+  return { ratings: [], myRating: null, ...json };
+}
+
+// 내 평점 작성/수정
+export async function submitRatingApi(placeId: string, input: RatingInput): Promise<void> {
+  const res = await fetch(`/api/place/${placeId}/rating`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || '평점 등록에 실패했어요.');
+}
+
+// 내 평점 삭제
+export async function deleteRatingApi(placeId: string): Promise<void> {
+  const res = await fetch(`/api/place/${placeId}/rating`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${await token()}` },
+  });
+  if (!res.ok) throw new Error((await res.json()).error || '삭제에 실패했어요.');
 }
 
 export async function updatePlaceApi(id: string, data: Record<string, unknown>): Promise<void> {

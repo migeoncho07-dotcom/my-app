@@ -32,9 +32,27 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       const u = await adminDb.collection('users').doc(x.added_by).get();
       addedByName = u.exists ? (u.data()!.nickname ?? '') : '';
     }
+
+    // 평점/후기 (최신순)
+    const ratingsSnap = await snap.ref.collection('ratings').get();
+    const ratings = ratingsSnap.docs
+      .map((d) => {
+        const r = d.data();
+        return {
+          ...r,
+          id: d.id,
+          created_at: r.created_at?.toMillis?.() ?? null,
+          updated_at: r.updated_at?.toMillis?.() ?? null,
+        };
+      })
+      .sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0));
+    const myRating = ratings.find((r: any) => r.uid === uid) ?? null;
+
     return NextResponse.json({
       place: { ...x, id: snap.id, added_at: x.added_at?.toMillis?.() ?? null },
       addedByName,
+      ratings,
+      myRating,
     });
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });

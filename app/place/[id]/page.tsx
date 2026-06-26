@@ -9,7 +9,8 @@ import { category } from '@/styles/tokens';
 import { timeAgo } from '@/lib/age';
 import CategoryBadge from '@/components/ui/CategoryBadge';
 import CategoryIcon from '@/components/ui/CategoryIcon';
-import type { Place, Category, KakaoPlace } from '@/types';
+import RatingSection from '@/components/place/Ratings';
+import type { Place, Category, KakaoPlace, Rating } from '@/types';
 
 const CATS = Object.keys(category) as Category[];
 
@@ -47,22 +48,40 @@ export default function PlaceDetailPage() {
   const [place, setPlace] = useState<Place | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'notfound'>('loading');
   const [addedByName, setAddedByName] = useState('');
+  const [ratings, setRatings] = useState<Rating[]>([]);
+  const [myRating, setMyRating] = useState<Rating | null>(null);
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // 평점 등록/수정 후 다시 불러오기
+  async function refresh() {
+    try {
+      const { place: p, addedByName: name, ratings: rs, myRating: mine } = await fetchPlaceApi(id);
+      if (!p) return;
+      setPlace(p);
+      setAddedByName(name);
+      setRatings(rs);
+      setMyRating(mine);
+    } catch {
+      /* 무시 */
+    }
+  }
+
   useEffect(() => {
     if (loading) return;
     let alive = true;
     (async () => {
       try {
-        const { place: p, addedByName: name } = await fetchPlaceApi(id);
+        const { place: p, addedByName: name, ratings: rs, myRating: mine } = await fetchPlaceApi(id);
         if (!alive) return;
         if (!p) return setState('notfound');
         setPlace(p);
         setAddedByName(name);
+        setRatings(rs);
+        setMyRating(mine);
         setState('ready');
       } catch {
         if (alive) setState('notfound');
@@ -216,6 +235,17 @@ export default function PlaceDetailPage() {
                 {place.added_at && <div style={{ fontSize: 11.5, color: '#8E8E93', fontWeight: 500, marginTop: 1 }}>{timeAgo(place.added_at as any)}</div>}
               </div>
             </div>
+
+            {/* 평점·후기 섹션 */}
+            <RatingSection
+              placeId={id}
+              placeName={place.title}
+              ratings={ratings}
+              myRating={myRating}
+              onChanged={refresh}
+            />
+
+            <div style={{ height: 8 }} />
           </div>
 
           <div style={{ padding: '14px 22px 26px', display: 'flex', gap: 9 }}>

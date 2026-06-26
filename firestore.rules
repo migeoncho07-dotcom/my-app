@@ -36,6 +36,13 @@ service cloud.firestore {
         allow read: if isGroupMember(groupId);
         allow create: if isGroupMember(groupId) && request.resource.data.added_by == request.auth.uid;
         allow update, delete: if isGroupMember(groupId);
+
+        // ratings/{uid} : 평점은 본인 것만 작성·수정·삭제 (문서 ID = 작성자 uid)
+        // (실제 쓰기는 서버 Admin SDK 경유. 직접 접근 시에도 안전하도록 제한)
+        match /ratings/{ratingUid} {
+          allow read: if isGroupMember(groupId);
+          allow create, update, delete: if isGroupMember(groupId) && request.auth.uid == ratingUid;
+        }
       }
     }
 

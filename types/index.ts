@@ -45,6 +45,25 @@ export interface Place {
   kakao_place_id: string;
   added_by: string; // uid
   added_at: number | null; // 등록시각(밀리초). 서버 API가 millis 로 변환해 내려줌.
+
+  // ── 평점 집계 (place 문서에 캐시 — 홈 목록을 빠르게) ──
+  avg_rating?: number | null; // 평균 별점(없으면 null)
+  rating_count?: number; // 평점 남긴 인원
+  popular_tags?: { tag: string; count: number }[]; // 많이 선택된 한마디 (카드엔 2개 노출)
+  rated_by?: string[]; // 평점(=방문) 남긴 uid 목록 → "다녀왔어요" 판정
+}
+
+// groups/{groupId}/places/{placeId}/ratings/{uid}  (유저당 1개 · 수정 가능)
+export interface Rating {
+  id: string; // = uid
+  uid: string;
+  user_nickname: string;
+  avatar_color: string;
+  score: 1 | 2 | 3 | 4 | 5;
+  tags: string[]; // 한마디 태그
+  comment: string; // 자세한 후기 (선택)
+  created_at: number | null; // millis
+  updated_at?: number | null;
 }
 
 // users/{uid}
