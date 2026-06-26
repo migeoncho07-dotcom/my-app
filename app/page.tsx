@@ -27,7 +27,7 @@ export default function RootPage() {
       }}
     >
       <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--brand)' }}>
-        아이랑
+        놀잇터
       </div>
       <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500 }}>
         불러오는 중…
