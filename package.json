@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "icons": "node scripts/gen-icons.js public",
     "sync": "next build && npx cap sync",
     "open:ios": "npx cap open ios",
     "open:android": "npx cap open android"
