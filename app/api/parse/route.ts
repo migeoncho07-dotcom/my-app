@@ -39,7 +39,7 @@ async function fetchLinkText(url: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  let body: { text?: string; url?: string };
+  let body: { text?: string; url?: string; image?: string };
   try {
     body = await req.json();
   } catch {
@@ -48,6 +48,21 @@ export async function POST(req: NextRequest) {
 
   let text = (body.text ?? '').trim();
   const url = (body.url ?? '').trim();
+  const image = (body.image ?? '').trim();
+
+  // 이미지(사진/스크린샷) 파싱
+  if (image) {
+    const m = image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+    if (!m) {
+      return NextResponse.json({ error: '이미지를 읽지 못했어요.' }, { status: 400 });
+    }
+    try {
+      const places = await parsePlaces({ image: { mediaType: m[1], data: m[2] } });
+      return NextResponse.json({ places });
+    } catch {
+      return NextResponse.json({ error: 'AI 정리 중 문제가 생겼어요.' }, { status: 502 });
+    }
+  }
 
   // 링크면 본문 가져오기
   if (!text && url) {
@@ -66,7 +81,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const places = await parsePlaces(text);
+    const places = await parsePlaces({ text });
     return NextResponse.json({ places });
   } catch (e: any) {
     const msg = String(e?.message || '');

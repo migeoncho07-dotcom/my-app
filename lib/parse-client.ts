@@ -1,10 +1,11 @@
 // 클라이언트에서 파싱/카카오 API를 호출하는 헬퍼.
 import type { ParsedPlace, KakaoPlace } from '@/types';
 
-// 텍스트 또는 링크 → 추출된 장소들
+// 텍스트/링크/이미지 → 추출된 장소들
 export async function parseInput(input: {
   text?: string;
   url?: string;
+  image?: string; // data:image/...;base64,...
 }): Promise<ParsedPlace[]> {
   const res = await fetch('/api/parse', {
     method: 'POST',
