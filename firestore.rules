@@ -17,6 +17,12 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
+
+      // 알림 — 본인만 읽기. 쓰기는 서버(Admin SDK)만 (직접 쓰기 차단)
+      match /notifications/{nid} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+        allow write: if false;
+      }
     }
 
     // groups/{groupId}
@@ -35,7 +41,9 @@ service cloud.firestore {
       match /places/{placeId} {
         allow read: if isGroupMember(groupId);
         allow create: if isGroupMember(groupId) && request.resource.data.added_by == request.auth.uid;
-        allow update, delete: if isGroupMember(groupId);
+        // 수정: 그룹 멤버 누구나 / 삭제: 작성자 본인만
+        allow update: if isGroupMember(groupId);
+        allow delete: if isGroupMember(groupId) && resource.data.added_by == request.auth.uid;
 
         // ratings/{uid} : 평점은 본인 것만 작성·수정·삭제 (문서 ID = 작성자 uid)
         // (실제 쓰기는 서버 Admin SDK 경유. 직접 접근 시에도 안전하도록 제한)

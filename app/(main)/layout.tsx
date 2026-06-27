@@ -23,7 +23,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   // 읽기 실패: 가입으로 보내지 않고 다시 시도 안내 (기존 데이터 보호)
   if (!loading && firebaseUser && !profile && profileError) {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 28, textAlign: 'center' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 28, textAlign: 'center' }}>
         <div style={{ fontSize: 40 }}>📡</div>
         <div style={{ fontSize: 15, fontWeight: 700 }}>연결이 지연되고 있어요</div>
         <div style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, lineHeight: 1.6 }}>
@@ -50,7 +50,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* 콘텐츠 영역(이 안에서만 스크롤) */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {children}

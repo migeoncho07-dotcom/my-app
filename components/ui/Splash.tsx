@@ -8,8 +8,7 @@ export default function Splash({ subtitle, dots }: { subtitle?: string; dots?: b
     <div
       style={{
         position: 'relative',
-        flex: 1,
-        minHeight: '100svh',
+        minHeight: '100dvh',
         width: '100%',
         overflow: 'hidden',
         background: 'linear-gradient(165deg, #FF7E5F 0%, #FF6B4A 48%, #F0562E 100%)',

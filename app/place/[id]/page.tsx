@@ -43,7 +43,7 @@ export default function PlaceDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = String(params.id);
-  const { loading } = useAuth();
+  const { loading, firebaseUser } = useAuth();
 
   const [place, setPlace] = useState<Place | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'notfound'>('loading');
@@ -132,6 +132,7 @@ export default function PlaceDetailPage() {
       router.replace('/home');
     } catch {
       setDeleting(false);
+      alert('등록한 사람만 삭제할 수 있어요.');
     }
   }
 
@@ -153,7 +154,7 @@ export default function PlaceDetailPage() {
   if (state === 'loading') return <Centered>불러오는 중…</Centered>;
   if (state === 'notfound' || !place) {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 20px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', padding: '56px 20px' }}>
         <button onClick={() => router.back()} style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand)', alignSelf: 'flex-start' }}>← 뒤로</button>
         <Centered>장소를 찾을 수 없어요.</Centered>
       </div>
@@ -169,7 +170,7 @@ export default function PlaceDetailPage() {
     : `https://map.kakao.com/link/search/${encodeURIComponent(place.address || place.title)}`;
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {/* 상단 헤더바 (시안 04): 뒤로 박스 · 타이틀 · 공유/편집 박스 */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 22px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => (editing ? setEditing(false) : router.back())} aria-label={editing ? '취소' : '뒤로'}
@@ -261,6 +262,7 @@ export default function PlaceDetailPage() {
             setDraft={setDraft as (d: Draft) => void}
             onDelete={remove}
             deleting={deleting}
+            isOwner={firebaseUser?.uid === place.added_by}
           />
         )
       )}
@@ -273,11 +275,13 @@ function EditForm({
   setDraft,
   onDelete,
   deleting,
+  isOwner,
 }: {
   draft: Draft;
   setDraft: (d: Draft) => void;
   onDelete: () => void;
   deleting: boolean;
+  isOwner: boolean;
 }) {
   const [candidates, setCandidates] = useState<KakaoPlace[] | null>(null);
   const [searching, setSearching] = useState(false);
@@ -353,9 +357,15 @@ function EditForm({
         <textarea value={draft.memo} onChange={(e) => up({ memo: e.target.value })} style={{ ...f, minHeight: 64, resize: 'vertical' }} />
       </Field>
 
-      <button onClick={onDelete} disabled={deleting} style={{ marginTop: 6, marginBottom: 8, fontSize: 14, fontWeight: 700, color: 'var(--brand-strong)', padding: 12 }}>
-        {deleting ? '삭제 중…' : '🗑️ 이 장소 삭제'}
-      </button>
+      {isOwner ? (
+        <button onClick={onDelete} disabled={deleting} style={{ marginTop: 6, marginBottom: 8, fontSize: 14, fontWeight: 700, color: 'var(--brand-strong)', padding: 12 }}>
+          {deleting ? '삭제 중…' : '🗑️ 이 장소 삭제'}
+        </button>
+      ) : (
+        <div style={{ marginTop: 6, marginBottom: 8, fontSize: 12.5, fontWeight: 500, color: 'var(--text-tertiary)', textAlign: 'center', padding: 12, lineHeight: 1.5 }}>
+          삭제는 등록한 사람만 할 수 있어요.<br />수정 내용은 등록자에게 알림이 가요.
+        </div>
+      )}
     </div>
   );
 }

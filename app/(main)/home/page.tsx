@@ -8,6 +8,7 @@ import { category } from '@/styles/tokens';
 import PlaceCard from '@/components/place/PlaceCard';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import CategoryIcon from '@/components/ui/CategoryIcon';
+import NotificationsBell from '@/components/ui/NotificationsBell';
 import type { Place, Member, Category } from '@/types';
 
 type FilterKey = 'all' | Category;
@@ -82,26 +83,29 @@ export default function HomePage() {
         subtitle="오늘도 좋은 곳 찾아봐요"
         title="모아둔 곳"
         right={
-          <button
-            onClick={() => router.push('/profile')}
-            aria-label="내 프로필"
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              flex: 'none',
-              background: profile?.avatar_color || '#FFD9CC',
-              border: '1px solid rgba(0,0,0,.06)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: 15,
-              fontWeight: 700,
-            }}
-          >
-            {profile?.nickname?.[0] ?? ''}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <NotificationsBell />
+            <button
+              onClick={() => router.push('/profile')}
+              aria-label="내 프로필"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                flex: 'none',
+                background: profile?.avatar_color || '#FFD9CC',
+                border: '1px solid rgba(0,0,0,.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: 15,
+                fontWeight: 700,
+              }}
+            >
+              {profile?.nickname?.[0] ?? ''}
+            </button>
+          </div>
         }
       />
 

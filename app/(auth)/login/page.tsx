@@ -49,7 +49,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ flex: 1, padding: '24px 30px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100dvh', padding: '24px 30px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       {/* 브랜드 로고 마크 + 타이틀 (v4) */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 46 }}>
         <div style={{ marginBottom: 20 }}>
