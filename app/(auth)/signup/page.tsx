@@ -125,7 +125,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '52px 24px 28px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', padding: '52px 24px 28px' }}>
       {/* 진행 점 */}
       {step < 6 && (
         <div style={{ display: 'flex', gap: 5, marginBottom: 26 }}>

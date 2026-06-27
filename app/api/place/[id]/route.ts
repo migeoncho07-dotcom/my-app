@@ -79,6 +79,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const ref = adminDb.collection('groups').doc(groupId).collection('places').doc(params.id);
     const snap = await ref.get();
     if (!snap.exists) return NextResponse.json({ error: '장소를 찾을 수 없어요.' }, { status: 404 });
+    const prev = snap.data()!;
     await ref.update({
       title: String(body.title ?? ''),
       category: String(body.category ?? 'etc'),
@@ -91,13 +92,33 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       memo: String(body.memo ?? ''),
       kakao_place_id: String(body.kakao_place_id ?? ''),
     });
+
+    // 작성자에게 "누가 수정했는지" 알림 (본인이 수정한 경우는 제외)
+    const ownerUid = prev.added_by as string | undefined;
+    if (ownerUid && ownerUid !== uid) {
+      try {
+        const me = await adminDb.collection('users').doc(uid).get();
+        const byName = me.exists ? (me.data()!.nickname ?? '멤버') : '멤버';
+        await adminDb.collection('users').doc(ownerUid).collection('notifications').add({
+          type: 'place_edited',
+          place_id: params.id,
+          place_title: String(body.title ?? prev.title ?? ''),
+          by_uid: uid,
+          by_name: byName,
+          read: false,
+          at: Date.now(),
+        });
+      } catch {
+        /* 알림 실패는 무시 */
+      }
+    }
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
   }
 }
 
-// DELETE /api/place/[id] — 장소 삭제
+// DELETE /api/place/[id] — 장소 삭제 (작성자 본인만)
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   let uid: string;
   try {
@@ -108,7 +129,13 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   try {
     const groupId = await groupIdForUid(uid);
     if (!groupId) return NextResponse.json({ error: '그룹이 없어요.' }, { status: 400 });
-    await adminDb.collection('groups').doc(groupId).collection('places').doc(params.id).delete();
+    const ref = adminDb.collection('groups').doc(groupId).collection('places').doc(params.id);
+    const snap = await ref.get();
+    if (!snap.exists) return NextResponse.json({ ok: true }); // 이미 없으면 성공 처리
+    if ((snap.data()!.added_by as string) !== uid) {
+      return NextResponse.json({ error: '등록한 사람만 삭제할 수 있어요.' }, { status: 403 });
+    }
+    await ref.delete();
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });

@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div style={{ flex: 1, padding: '64px 24px 32px', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', padding: '64px 24px 32px', display: 'flex', flexDirection: 'column' }}>
       {!sent ? (
         <>
           <div style={{ marginBottom: 26 }}>
