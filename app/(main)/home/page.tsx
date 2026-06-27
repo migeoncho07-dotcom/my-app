@@ -169,7 +169,7 @@ export default function HomePage() {
       </div>
 
       {/* 카드 목록 / 빈 상태 */}
-      <div style={{ flex: 1, padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 18px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {places === null ? (
           <Centered>불러오는 중…</Centered>
         ) : visible.length === 0 ? (

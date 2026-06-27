@@ -4,12 +4,24 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { parseInput, searchKakao } from '@/lib/parse-client';
-import { savePlaceApi } from '@/lib/group-client';
+import { savePlaceApi, fetchGroup, cachedGroupSync } from '@/lib/group-client';
 import { category } from '@/styles/tokens';
 import Button from '@/components/ui/Button';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import CategoryIcon from '@/components/ui/CategoryIcon';
-import type { ParsedPlace, Category, KakaoPlace } from '@/types';
+import type { ParsedPlace, Category, KakaoPlace, Place } from '@/types';
+
+// 이미 저장된 곳인지 — 카카오 장소ID가 같거나, 이름이 같으면 중복으로 봄
+function norm(s?: string) {
+  return (s ?? '').replace(/\s+/g, '').toLowerCase();
+}
+function findDup(p: { title: string; kakao_place_id?: string }, existing: Place[]): Place | undefined {
+  return existing.find(
+    (e) =>
+      (!!p.kakao_place_id && !!e.kakao_place_id && p.kakao_place_id === e.kakao_place_id) ||
+      (norm(p.title).length > 0 && norm(e.title) === norm(p.title)),
+  );
+}
 
 type Step = 'input' | 'loading' | 'select' | 'edit' | 'done';
 type Tab = 'text' | 'photo' | 'link' | 'direct';
@@ -86,6 +98,22 @@ export default function AddPage() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<SavedSummary[]>([]);
+  const [existing, setExisting] = useState<Place[]>([]);
+  // 중복 확인 팝업: 표시할 이름들 + 확인 시 실행할 동작
+  const [confirmDup, setConfirmDup] = useState<{ names: string[]; onYes: () => void } | null>(null);
+
+  // 이미 저장된 목록 불러오기 (중복 체크용)
+  useEffect(() => {
+    let alive = true;
+    const c = cachedGroupSync();
+    if (c) setExisting(c.places);
+    fetchGroup()
+      .then((d) => alive && setExisting(d.places))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function handleParse() {
     setError('');
@@ -117,10 +145,18 @@ export default function AddPage() {
     }
   }
 
-  async function handleDirectSave() {
+  function handleDirectSave() {
     if (!firebaseUser) return;
     if (!direct.title.trim()) return setError('장소 이름을 입력해 주세요.');
     setError('');
+    const dup = findDup(direct, existing);
+    if (dup) {
+      setConfirmDup({ names: [direct.title], onYes: () => { setConfirmDup(null); doDirectSave(); } });
+      return;
+    }
+    doDirectSave();
+  }
+  async function doDirectSave() {
     setSaving(true);
     try {
       await savePlaceApi({ ...direct, source_text: '직접 입력', ai_confidence: 1 });
@@ -133,11 +169,19 @@ export default function AddPage() {
     }
   }
 
-  async function handleSave() {
+  function handleSave() {
     if (!firebaseUser) return;
     const chosen = items.filter((it) => it.include);
     if (chosen.length === 0) return setError('담을 장소를 한 개 이상 골라주세요.');
     setError('');
+    const dupNames = chosen.filter((it) => findDup(it, existing)).map((it) => it.title);
+    if (dupNames.length > 0) {
+      setConfirmDup({ names: dupNames, onYes: () => { setConfirmDup(null); doSave(chosen); } });
+      return;
+    }
+    doSave(chosen);
+  }
+  async function doSave(chosen: EditablePlace[]) {
     setSaving(true);
     try {
       const sourceText = tab === 'text' ? text : tab === 'link' ? url : '사진';
@@ -227,6 +271,30 @@ export default function AddPage() {
           )}
           <div style={{ flex: 1 }}>
             <Button onClick={handleSave} disabled={saving}>{saving ? '저장하는 중…' : `${editTotal}곳 저장`}</Button>
+          </div>
+        </div>
+      )}
+
+      {/* 이미 저장된 곳 — 한 번 더 확인 팝업 */}
+      {confirmDup && (
+        <div
+          onClick={() => setConfirmDup(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 1300, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: '#fff', borderRadius: 20, padding: 22, textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#FFF3EE', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FF6B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v5" /><path d="M12 16h.01" /></svg>
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em' }}>이미 저장된 곳이에요</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.6, marginTop: 8 }}>
+              {confirmDup.names.length === 1
+                ? <><b style={{ color: '#1D1D1F' }}>{confirmDup.names[0]}</b> 은(는) 이미 목록에 있어요.<br />그래도 저장할까요?</>
+                : <><b style={{ color: '#1D1D1F' }}>{confirmDup.names.length}곳</b>이 이미 목록에 있어요.<br />그래도 저장할까요?</>}
+            </div>
+            <div style={{ display: 'flex', gap: 9, marginTop: 20 }}>
+              <button onClick={() => setConfirmDup(null)} style={{ flex: 1, background: '#fff', border: '1px solid var(--border)', color: '#636366', borderRadius: 14, padding: 14, fontSize: 14.5, fontWeight: 600 }}>취소</button>
+              <button onClick={confirmDup.onYes} style={{ flex: 1, background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 14, padding: 14, fontSize: 14.5, fontWeight: 700 }}>그래도 저장</button>
+            </div>
           </div>
         </div>
       )}

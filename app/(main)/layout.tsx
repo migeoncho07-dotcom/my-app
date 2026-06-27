@@ -53,11 +53,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 86 }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* 콘텐츠 영역(이 안에서만 스크롤) */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {children}
       </div>
+      {/* 탭바는 레이아웃에 포함(고정 떠있기 아님) → 콘텐츠 위로 절대 안 겹침 */}
       <GlassTabBar />
-    </>
+    </div>
   );
 }

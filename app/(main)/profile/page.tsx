@@ -84,7 +84,7 @@ export default function ProfilePage() {
   const kids = profile?.kid_birthdays ?? [];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       <ScreenHeader title="나" />
 
       {/* 프로필 카드 */}
