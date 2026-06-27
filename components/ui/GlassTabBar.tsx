@@ -92,17 +92,16 @@ export default function GlassTabBar() {
           onClick={() => router.push('/add')}
           aria-label="장소 추가"
           style={{
-            width: 54,
-            height: 54,
-            borderRadius: 14,
+            width: 50,
+            height: 50,
+            borderRadius: '50%',
             background: 'var(--brand)',
             color: '#fff',
-            marginTop: -20,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flex: 'none',
-            boxShadow: '0 12px 26px -8px rgba(255,107,74,.65)',
+            boxShadow: '0 8px 18px -6px rgba(255,107,74,.6)',
           }}
         >
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
