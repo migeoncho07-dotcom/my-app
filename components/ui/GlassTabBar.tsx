@@ -72,13 +72,8 @@ export default function GlassTabBar() {
   return (
     <nav
       style={{
-        position: 'fixed',
-        bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        flexShrink: 0,
         width: '100%',
-        maxWidth: 430,
-        zIndex: 1100,
         background: '#fff',
         borderTop: '1px solid #EDEDF0',
         display: 'flex',

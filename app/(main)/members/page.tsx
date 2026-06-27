@@ -26,7 +26,7 @@ export default function MembersPage() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <ScreenHeader title="멤버" subtitle="함께 장소를 모으는 사람들이에요" />
 
-      <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {members.map((m) => (
           <div
             key={m.uid}
