@@ -171,7 +171,7 @@ export default function HomePage() {
       {/* 카드 목록 / 빈 상태 */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 18px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {places === null ? (
-          <Centered>불러오는 중…</Centered>
+          <CardSkeleton />
         ) : visible.length === 0 ? (
           <EmptyState hasAny={places.length > 0} />
         ) : (
@@ -194,6 +194,25 @@ function Centered({ children }: { children: React.ReactNode }) {
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: 13, fontWeight: 500 }}>
       {children}
     </div>
+  );
+}
+
+// 인앱 로딩 — 회색 스켈레톤 카드 (디자인: 장소 불러오는 중)
+function CardSkeleton() {
+  const bar = (w: string, h: number) => (
+    <div className="sk-shimmer" style={{ width: w, height: h, borderRadius: 6, background: '#E9E9EE' }} />
+  );
+  return (
+    <>
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} style={{ background: '#fff', border: '1px solid #ECECF0', borderRadius: 14, padding: '12px 13px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {bar('38%', 13)}
+          {bar('70%', 11)}
+          {bar('50%', 11)}
+        </div>
+      ))}
+      <style>{`@keyframes sk-shimmer-kf{0%{opacity:1}50%{opacity:.45}100%{opacity:1}}.sk-shimmer{animation:sk-shimmer-kf 1.2s ease-in-out infinite}`}</style>
+    </>
   );
 }
 

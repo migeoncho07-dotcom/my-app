@@ -60,16 +60,12 @@ function roundedRectInside(x, y, r) {
 
 const CORAL = hexToRgb('#FF6B4A');
 const WHITE = hexToRgb('#FFFFFF');
-const PEACH = hexToRgb('#FFB59E');
 
-// 디자인 시안 비율 (74px 기준)
-const R_WHITE = 30 / 2 / 74;            // 흰 원 반지름 = 0.2027
-const DOT_CX = (74 - 18 - 13 / 2) / 74; // 0.669
-const DOT_CY = DOT_CX;
-const R_PEACH = 13 / 2 / 74;            // 0.0878
-const RING = 2 / 74;                    // 코랄 테두리 두께
+// 새 디자인: 코랄 둥근 사각형 + 가운데 흰 원 + 그 안 가운데 코랄 점 (심플 원형 로고)
+const R_WHITE = 0.225;  // 흰 원 반지름(비율)
+const R_DOT = 0.088;    // 가운데 코랄 점 반지름(비율)
 
-// maskable: OS가 모서리를 깎으므로 꽉 찬 사각형. 일반(any): 디자인의 둥근 사각형(24/74).
+// maskable: OS가 모서리를 깎으므로 꽉 찬 사각형. 일반(any): 둥근 사각형.
 function renderIcon(size, { maskable }) {
   const SS = 4;
   const rgba = Buffer.alloc(size * size * 4);
@@ -86,14 +82,11 @@ function renderIcon(size, { maskable }) {
             r = g = b = a = 0; // 모서리 밖(투명)
           } else {
             r = CORAL[0]; g = CORAL[1]; b = CORAL[2]; a = 255; // 코랄 배경
-            const dDot = Math.hypot(fx - DOT_CX, fy - DOT_CY);
             const dCtr = Math.hypot(fx - 0.5, fy - 0.5);
-            if (dDot <= R_PEACH) {
-              r = PEACH[0]; g = PEACH[1]; b = PEACH[2];        // 복숭아 점
-            } else if (dDot <= R_PEACH + RING) {
-              r = CORAL[0]; g = CORAL[1]; b = CORAL[2];        // 점의 코랄 테두리
+            if (dCtr <= R_DOT) {
+              r = CORAL[0]; g = CORAL[1]; b = CORAL[2];        // 가운데 코랄 점
             } else if (dCtr <= R_WHITE) {
-              r = WHITE[0]; g = WHITE[1]; b = WHITE[2];        // 가운데 흰 원
+              r = WHITE[0]; g = WHITE[1]; b = WHITE[2];        // 흰 원(도넛)
             }
           }
           rs += r; gs += g; bs += b; as += a;

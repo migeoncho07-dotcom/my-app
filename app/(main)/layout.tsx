@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import GlassTabBar from '@/components/ui/GlassTabBar';
+import Splash from '@/components/ui/Splash';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -43,17 +44,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // 인증/프로필 확인 중 / 비로그인 상태면 내용 감추기
+  // 인증/프로필 확인 중 / 비로그인 상태 — 초기 로딩 스플래시
   if (loading || !firebaseUser || !profile) {
-    return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: 13 }}>
-        불러오는 중…
-      </div>
-    );
+    return <Splash dots subtitle="우리 그룹 정보를 불러오는 중…" />;
   }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* 콘텐츠 영역(이 안에서만 스크롤) */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {children}
