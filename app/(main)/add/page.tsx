@@ -174,10 +174,16 @@ export default function AddPage() {
     setError(''); setEditIdx(0); setStep('edit');
   }
 
+  // 하단 고정 바에서 쓰는 값
+  const chosenCount = items.filter((it) => it.include).length;
+  const editTotal = chosenCount;
+  const editSafeIdx = Math.min(editIdx, Math.max(0, editTotal - 1));
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {step === 'input' && <ScreenHeader title="정보 추가" />}
 
+      {/* 스크롤 영역 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px', minHeight: 0, overflowY: 'auto' }}>
         {step === 'input' && (
           <InputStep
@@ -197,6 +203,33 @@ export default function AddPage() {
         )}
         {step === 'done' && <DoneStep saved={saved} onHome={() => router.push('/home')} onMore={continueAdd} />}
       </div>
+
+      {/* 고정 하단 액션 바 (스크롤·탭바 위) */}
+      {step === 'input' && (
+        <div style={{ padding: '12px 20px 14px' }}>
+          {tab === 'direct'
+            ? <Button onClick={handleDirectSave} disabled={saving}>{saving ? '저장하는 중…' : '추가하기'}</Button>
+            : <Button onClick={handleParse}>＋ 장소 추가하기</Button>}
+        </div>
+      )}
+      {step === 'select' && (
+        <div style={{ padding: '12px 20px 14px' }}>
+          <Button onClick={proceedToEdit} disabled={chosenCount === 0}>선택한 {chosenCount}곳 정리하기</Button>
+        </div>
+      )}
+      {step === 'edit' && (
+        <div style={{ padding: '12px 20px 14px', display: 'flex', gap: 9 }}>
+          {editTotal > 1 && (
+            <button onClick={() => setEditIdx((n) => Math.min(n + 1, editTotal - 1))} disabled={editSafeIdx >= editTotal - 1}
+              style={{ flex: 'none', minWidth: 92, textAlign: 'center', background: '#fff', border: '1px solid var(--border)', color: '#636366', borderRadius: 14, padding: 16, fontSize: 14, fontWeight: 600, opacity: editSafeIdx >= editTotal - 1 ? 0.4 : 1 }}>
+              다음 장소 ›
+            </button>
+          )}
+          <div style={{ flex: 1 }}>
+            <Button onClick={handleSave} disabled={saving}>{saving ? '저장하는 중…' : `${editTotal}곳 저장`}</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -270,14 +303,7 @@ function InputStep({
       {tab === 'direct' && <DirectForm draft={direct} setDraft={setDirect} />}
 
       {error && <div style={{ color: 'var(--brand-strong)', fontSize: 13, fontWeight: 600, marginTop: 12 }}>{error}</div>}
-
-      <div style={{ marginTop: 'auto', paddingTop: 24, paddingBottom: 24 }}>
-        {tab === 'direct' ? (
-          <Button onClick={onDirectSave} disabled={saving}>{saving ? '저장하는 중…' : '추가하기'}</Button>
-        ) : (
-          <Button onClick={onParse}>＋ 장소 추가하기</Button>
-        )}
-      </div>
+      <div style={{ height: 12 }} />
     </div>
   );
 }
@@ -443,10 +469,7 @@ function SelectStep({
       </div>
 
       {error && <div style={{ color: 'var(--brand-strong)', fontSize: 13, fontWeight: 600, marginTop: 12 }}>{error}</div>}
-
-      <div style={{ marginTop: 'auto', paddingTop: 20, paddingBottom: 24 }}>
-        <Button onClick={onProceed} disabled={chosen === 0}>선택한 {chosen}곳 정리하기</Button>
-      </div>
+      <div style={{ height: 12 }} />
     </div>
   );
 }
@@ -483,18 +506,7 @@ function EditStep({
       </div>
 
       {error && <div style={{ color: 'var(--brand-strong)', fontSize: 13, fontWeight: 600, marginTop: 12 }}>{error}</div>}
-
-      <div style={{ marginTop: 'auto', paddingTop: 20, paddingBottom: 24, display: 'flex', gap: 9 }}>
-        {total > 1 && (
-          <button onClick={() => setEditIdx((n) => Math.min(n + 1, total - 1))} disabled={safeIdx >= total - 1}
-            style={{ flex: 'none', minWidth: 92, textAlign: 'center', background: '#fff', border: '1px solid var(--border)', color: '#636366', borderRadius: 14, padding: 16, fontSize: 14, fontWeight: 600, opacity: safeIdx >= total - 1 ? 0.4 : 1 }}>
-            다음 장소 ›
-          </button>
-        )}
-        <div style={{ flex: 1 }}>
-          <Button onClick={onSave} disabled={saving}>{saving ? '저장하는 중…' : `${total}곳 저장`}</Button>
-        </div>
-      </div>
+      <div style={{ height: 12 }} />
     </div>
   );
 }
