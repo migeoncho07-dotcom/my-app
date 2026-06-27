@@ -78,7 +78,6 @@ export default function GlassTabBar() {
         borderTop: '1px solid #EDEDF0',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-around',
         padding: '12px 6px calc(16px + env(safe-area-inset-bottom))',
       }}
     >
@@ -87,28 +86,30 @@ export default function GlassTabBar() {
         <TabButton key={t.key} name={t.key} label={t.label} active={isActive(t.path)} onClick={() => router.push(t.path)} />
       ))}
 
-      {/* 중앙 ＋ (원본: SVG 라인 플러스) */}
-      <button
-        onClick={() => router.push('/add')}
-        aria-label="장소 추가"
-        style={{
-          width: 54,
-          height: 54,
-          borderRadius: 14,
-          background: 'var(--brand)',
-          color: '#fff',
-          marginTop: -20,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flex: 'none',
-          boxShadow: '0 12px 26px -8px rgba(255,107,74,.65)',
-        }}
-      >
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </button>
+      {/* 중앙 ＋ — 동일 너비 칸 안에 가운데 정렬(좌우 메뉴 선택해도 안 움직임) */}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+        <button
+          onClick={() => router.push('/add')}
+          aria-label="장소 추가"
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 14,
+            background: 'var(--brand)',
+            color: '#fff',
+            marginTop: -20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: 'none',
+            boxShadow: '0 12px 26px -8px rgba(255,107,74,.65)',
+          }}
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      </div>
 
       {/* 멤버 · 나 */}
       {tabs.slice(2).map((t) => (
@@ -133,6 +134,7 @@ function TabButton({
     <button
       onClick={onClick}
       style={{
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
