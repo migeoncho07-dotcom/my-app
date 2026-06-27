@@ -1,38 +1,32 @@
 'use client';
 
-// 놀잇터 브랜드 마크 — 디자인 시안 v2 기준.
-// 코랄 둥근 사각형 + 가운데 흰 원 + 오른쪽아래 복숭아 점(코랄 테두리).
-// size를 바꾸면 모든 요소가 74px 시안 비율로 함께 커집니다.
-export default function BrandMark({ size = 74 }: { size?: number }) {
-  const k = size / 74; // 시안(74px) 대비 배율
+// 놀잇터 브랜드 마크 (새 디자인) — 둥근 사각형 + 흰 원(도넛) + 가운데 코랄 점.
+// variant='default': 코랄 사각형 (흰 배경 위). variant='splash': 반투명 흰 사각형 (코랄 배경 위).
+export default function BrandMark({ size = 74, variant = 'default' }: { size?: number; variant?: 'default' | 'splash' }) {
+  const k = size / 74;
+  const circle = size * 0.45; // 흰 원 지름
+  const dot = size * 0.176; // 가운데 코랄 점 지름
+  const splash = variant === 'splash';
   return (
     <div
       style={{
         width: size,
         height: size,
         borderRadius: 18 * k,
-        background: 'var(--brand)',
+        background: splash ? 'rgba(255,255,255,0.22)' : 'var(--brand)',
+        border: splash ? '1px solid rgba(255,255,255,0.4)' : 'none',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: `0 ${16 * k}px ${32 * k}px ${-10 * k}px rgba(255,107,74,.6)`,
-        position: 'relative',
+        boxShadow: splash
+          ? '0 22px 44px -14px rgba(0,0,0,.3)'
+          : `0 ${16 * k}px ${32 * k}px ${-10 * k}px rgba(255,107,74,.6)`,
         flex: 'none',
       }}
     >
-      <div style={{ width: 30 * k, height: 30 * k, borderRadius: '50%', background: '#fff' }} />
-      <div
-        style={{
-          position: 'absolute',
-          width: 13 * k,
-          height: 13 * k,
-          borderRadius: '50%',
-          background: '#FFB59E',
-          right: 18 * k,
-          bottom: 18 * k,
-          border: `${Math.max(2, 2 * k)}px solid var(--brand)`,
-        }}
-      />
+      <div style={{ width: circle, height: circle, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: dot, height: dot, borderRadius: '50%', background: 'var(--brand)' }} />
+      </div>
     </div>
   );
 }
