@@ -50,9 +50,10 @@ body {
   margin: 0 auto;
   background: var(--bg);
   position: relative;
-  /* 실제 스크롤은 여기서 (바디는 잠금). 화면이 길면 이 안에서만 스크롤됨 */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  /* 앱셸은 '화면 틀'만 담당하고 스크롤하지 않음.
+     실제 스크롤은 각 화면 내부의 단 하나의 스크롤 영역에서만 일어남
+     (틀과 화면 양쪽이 스크롤되면 모바일에서 가끔 스크롤이 멈추는 버그가 생김). */
+  overflow: hidden;
 }
 
 /* 입력 요소 기본 리셋 */

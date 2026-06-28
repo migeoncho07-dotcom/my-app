@@ -170,7 +170,7 @@ export default function PlaceDetailPage() {
     : `https://map.kakao.com/link/search/${encodeURIComponent(place.address || place.title)}`;
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {/* 상단 헤더바 (시안 04): 뒤로 박스 · 타이틀 · 공유/편집 박스 */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 22px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => (editing ? setEditing(false) : router.back())} aria-label={editing ? '취소' : '뒤로'}
