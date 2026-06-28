@@ -46,7 +46,11 @@ body {
 .app-shell {
   width: 100%;
   max-width: 430px;
-  height: 100dvh;
+  /* 보이는 화면 높이(작은 뷰포트)에 정확히 맞춤 — 100dvh는 안드로이드에서
+     시스템 내비 영역까지 포함해 화면보다 커져서, 맨 아래 탭바가 화면 밖으로
+     밀려나가 하단 시트에 가려지는 문제가 있었음. 바디 스크롤이 잠겨 있어
+     svh로 인한 빈 공간 문제는 생기지 않음. */
+  height: 100svh;
   margin: 0 auto;
   background: var(--bg);
   position: relative;
