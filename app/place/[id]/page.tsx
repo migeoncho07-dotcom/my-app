@@ -165,21 +165,22 @@ export default function PlaceDetailPage() {
   // 티맵 앱 호출 — 길찾기는 좌표로 경로안내, 지도보기는 주소로 검색
   const tName = encodeURIComponent(place.title);
   const tQuery = encodeURIComponent(place.address || place.title);
-  const tmapRoute = hasCoord
-    ? `tmap://route?goalname=${tName}&goalx=${place.lng}&goaly=${place.lat}`
-    : `tmap://search?name=${tQuery}`;
-  const tmapView = `tmap://search?name=${tQuery}`;
+  const routePath = hasCoord ? 'route' : 'search';
+  const routeQuery = hasCoord
+    ? `goalname=${tName}&goalx=${place.lng}&goaly=${place.lat}`
+    : `name=${tQuery}`;
+  const viewQuery = `name=${tQuery}`;
 
-  // 티맵 앱 열기 시도 → 미설치(화면 그대로)면 티맵 안내 페이지로
-  function openTmap(scheme: string) {
-    let left = false;
-    const onHide = () => { left = true; };
-    document.addEventListener('visibilitychange', onHide);
-    window.location.href = scheme;
-    window.setTimeout(() => {
-      document.removeEventListener('visibilitychange', onHide);
-      if (!left && !document.hidden) window.location.href = 'https://www.tmap.co.kr/';
-    }, 1500);
+  // 티맵 앱 열기. 안드로이드는 intent://로 앱을 확실히 띄우고(미설치 시 플레이스토어),
+  // 그 외(iOS 등)는 tmap:// 스킴으로 앱 실행.
+  function openTmap(path: string, query: string) {
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    if (/Android/i.test(ua)) {
+      const fb = encodeURIComponent('https://play.google.com/store/apps/details?id=com.skt.tmap.ku');
+      window.location.href = `intent://${path}?${query}#Intent;scheme=tmap;package=com.skt.tmap.ku;S.browser_fallback_url=${fb};end`;
+    } else {
+      window.location.href = `tmap://${path}?${query}`;
+    }
   }
 
   return (
@@ -263,8 +264,8 @@ export default function PlaceDetailPage() {
           </div>
 
           <div style={{ padding: '14px 22px 26px', display: 'flex', gap: 9 }}>
-            <button onClick={() => openTmap(tmapView)} style={{ ...btnStyle(false), flex: 1 }}>지도에서 보기</button>
-            <button onClick={() => openTmap(tmapRoute)} style={{ ...btnStyle(true), flex: 1 }}>길찾기</button>
+            <button onClick={() => openTmap('search', viewQuery)} style={{ ...btnStyle(false), flex: 1 }}>지도에서 보기</button>
+            <button onClick={() => openTmap(routePath, routeQuery)} style={{ ...btnStyle(true), flex: 1 }}>길찾기</button>
           </div>
         </>
       ) : (
