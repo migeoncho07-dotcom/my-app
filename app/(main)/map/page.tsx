@@ -1,7 +1,7 @@
 'use client';
 
 // 무료 오픈맵(OpenStreetMap + Leaflet) + 위치 검색 → 주변 장소 거리순 (시안 05)
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
 import { fetchGroup, cachedGroupSync } from '@/lib/group-client';
@@ -51,6 +51,24 @@ const DRIVE_BUCKETS: { min: 30 | 60 | 120; label: string; upperKm: number }[] = 
   { min: 120, label: '2시간', upperKm: 220 },
 ];
 
+// 주행시간 구간(밴드) — 가까울수록 초록, 멀수록 빨강. 핀/목록 색으로 범위를 표시.
+type Band = 30 | 60 | 120;
+const BANDS: { band: Band; label: string; color: string; bg: string }[] = [
+  { band: 30, label: '차로 30분 이내', color: '#1FA463', bg: '#E7F6EE' },
+  { band: 60, label: '30분~1시간', color: '#EE9100', bg: '#FFF2DD' },
+  { band: 120, label: '1시간~2시간', color: '#F2553D', bg: '#FFEAE6' },
+];
+function bandOf(sec: number): Band {
+  const m = sec / 60;
+  if (m <= 30) return 30;
+  if (m <= 60) return 60;
+  return 120;
+}
+function bandMeta(sec: number) {
+  const b = bandOf(sec);
+  return BANDS.find((x) => x.band === b)!;
+}
+
 export default function MapPage() {
   const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
@@ -72,6 +90,7 @@ export default function MapPage() {
   const [driveMin, setDriveMin] = useState<30 | 60 | 120 | null>(null);
   const [driveSec, setDriveSec] = useState<Record<string, number>>({});
   const [driveLoading, setDriveLoading] = useState(false);
+  const driveMode = !!(myLoc && driveMin);
 
   const visiblePlaces = useMemo(
     () => places.filter((p) => filter === 'all' || p.category === filter),
@@ -126,19 +145,24 @@ export default function MapPage() {
       .filter((p) => p.lat && p.lng)
       .forEach((p) => {
         const c = category[p.category] ?? category.etc;
+        // 차로 시간 모드: 범위 안이면 밴드색(초록→주황→빨강), 범위 밖이면 흐리게
+        const sec = driveSec[p.id];
+        const inRange = driveMode && sec != null && sec <= driveMin! * 60;
+        const pinColor = inRange ? bandMeta(sec).color : c.text;
+        const opacity = driveMode && !inRange ? 0.3 : 1;
         // 시안 05: 물방울(teardrop) 핀 — 흰 테두리, 끝이 아래를 향함
         const icon = L.divIcon({
           className: 'airang-pin',
-          html: `<div style="transform:translate(-50%,-100%);"><div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;background:${c.text};transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 6px 14px -4px rgba(0,0,0,.45);"><span style="transform:rotate(45deg);line-height:0;">${categoryIconHtml(p.category, '#fff', 15)}</span></div></div>`,
+          html: `<div style="transform:translate(-50%,-100%);opacity:${opacity};"><div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;background:${pinColor};transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 6px 14px -4px rgba(0,0,0,.45);"><span style="transform:rotate(45deg);line-height:0;">${categoryIconHtml(p.category, '#fff', 15)}</span></div></div>`,
           iconSize: [0, 0],
         });
         const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
         m.on('click', () => router.push(`/place/${p.id}`));
         markersRef.current.push(m);
-        latlngs.push([p.lat, p.lng]);
+        if (!driveMode || inRange) latlngs.push([p.lat, p.lng]);
       });
     if (!center && latlngs.length > 0) map.fitBounds(latlngs, { padding: [50, 50], maxZoom: 15 });
-  }, [visiblePlaces, ready, center, router]);
+  }, [visiblePlaces, ready, center, router, driveMode, driveSec, driveMin]);
 
   // 검색
   async function handleSearch() {
@@ -271,8 +295,6 @@ export default function MapPage() {
       .map((p) => ({ p, sec: driveSec[p.id] }))
       .sort((a, b) => a.sec - b.sec);
   }, [myLoc, driveMin, visiblePlaces, driveSec]);
-
-  const driveMode = !!(myLoc && driveMin);
 
   // 주변 장소 (검색 위치 기준 반경 3km 이내, 거리순)
   const RADIUS_M = 3000;
@@ -493,33 +515,53 @@ export default function MapPage() {
                   이 시간 안에 닿는 장소가 없어요. 시간을 늘려보세요.
                 </div>
               ) : (
-                driveResults.map(({ p, sec }) => {
-                  const c = category[p.category] ?? category.etc;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => router.push(`/place/${p.id}`)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left', padding: '9px 4px', borderBottom: '1px solid #EFEFF4' }}
-                    >
-                      <div style={{ width: 50, height: 50, borderRadius: 12, flex: 'none', background: c.bg, color: c.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <CategoryIcon type={p.category} size={22} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.title}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#8E8E93', marginTop: 2, fontWeight: 500 }}>
-                          {[c.label, p.age_target].filter(Boolean).join(' · ')}
-                        </div>
-                      </div>
-                      <div style={{ flex: 'none', textAlign: 'right' }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--brand)', letterSpacing: '-0.01em' }}>
-                          {fmtDrive(sec)}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })
+                (() => {
+                  // 밴드별 개수 + 구간이 바뀌는 첫 항목에만 색깔 머리글 표시
+                  const counts: Record<number, number> = {};
+                  driveResults.forEach(({ sec }) => {
+                    const b = bandOf(sec);
+                    counts[b] = (counts[b] || 0) + 1;
+                  });
+                  let prevBand: Band | null = null;
+                  return driveResults.map(({ p, sec }) => {
+                    const c = category[p.category] ?? category.etc;
+                    const bm = bandMeta(sec);
+                    const showHeader = bm.band !== prevBand;
+                    prevBand = bm.band;
+                    return (
+                      <Fragment key={p.id}>
+                        {showHeader && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '12px 4px 6px' }}>
+                            <span style={{ width: 9, height: 9, borderRadius: '50%', background: bm.color, flex: 'none' }} />
+                            <span style={{ fontSize: 12.5, fontWeight: 800, color: bm.color, letterSpacing: '-0.01em' }}>{bm.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: '#B0B0B5' }}>{counts[bm.band]}곳</span>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => router.push(`/place/${p.id}`)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left', padding: '9px 4px', borderBottom: '1px solid #EFEFF4', width: '100%' }}
+                        >
+                          <div style={{ width: 50, height: 50, borderRadius: 12, flex: 'none', background: c.bg, color: c.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CategoryIcon type={p.category} size={22} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {p.title}
+                            </div>
+                            <div style={{ fontSize: 12, color: '#8E8E93', marginTop: 2, fontWeight: 500 }}>
+                              {[c.label, p.age_target].filter(Boolean).join(' · ')}
+                            </div>
+                          </div>
+                          <div style={{ flex: 'none', textAlign: 'right' }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: bm.color, letterSpacing: '-0.01em' }}>
+                              {fmtDrive(sec)}
+                            </div>
+                          </div>
+                        </button>
+                      </Fragment>
+                    );
+                  });
+                })()
               )}
             </div>
           </div>
