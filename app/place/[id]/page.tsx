@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { fetchPlaceApi, updatePlaceApi, deletePlaceApi } from '@/lib/group-client';
+import { fetchPlaceApi, updatePlaceApi, deletePlaceApi, cachedGroupSync } from '@/lib/group-client';
 import { searchKakao } from '@/lib/parse-client';
 import { category } from '@/styles/tokens';
 import { timeAgo } from '@/lib/age';
@@ -73,18 +73,36 @@ export default function PlaceDetailPage() {
   useEffect(() => {
     if (loading) return;
     let alive = true;
+
+    // 1) 이미 받아둔 목록 캐시에서 즉시 표시 (로딩 없이 바로 뜸)
+    const cached = cachedGroupSync();
+    if (cached) {
+      const p = cached.places.find((x) => x.id === id);
+      if (p) {
+        setPlace(p);
+        const m = cached.members.find((mm) => mm.uid === p.added_by);
+        setAddedByName(m?.nickname || '');
+        setState('ready');
+      }
+    }
+
+    // 2) 서버에서 최신 정보(평점 포함)로 갱신
     (async () => {
       try {
         const { place: p, addedByName: name, ratings: rs, myRating: mine } = await fetchPlaceApi(id);
         if (!alive) return;
-        if (!p) return setState('notfound');
+        if (!p) {
+          // 캐시에 이미 떠 있으면 유지, 아니면 없음 처리
+          setState((s) => (s === 'ready' ? s : 'notfound'));
+          return;
+        }
         setPlace(p);
         setAddedByName(name);
         setRatings(rs);
         setMyRating(mine);
         setState('ready');
       } catch {
-        if (alive) setState('notfound');
+        if (alive) setState((s) => (s === 'ready' ? s : 'notfound'));
       }
     })();
     return () => {
