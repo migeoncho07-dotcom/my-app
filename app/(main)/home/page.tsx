@@ -172,6 +172,14 @@ export default function HomePage() {
         })}
       </div>
 
+      {/* 등록된 장소 개수 (현재 필터 기준) */}
+      {places !== null && (
+        <div style={{ padding: '0 22px 8px', fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '-0.01em' }}>
+          {FILTERS.find((f) => f.key === filter)?.label ?? '전체'}{' '}
+          <span style={{ color: 'var(--brand)', fontWeight: 800 }}>{visible.length}곳</span>
+        </div>
+      )}
+
       {/* 카드 목록 / 빈 상태 */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 18px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {places === null ? (
