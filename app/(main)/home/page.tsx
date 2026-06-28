@@ -77,7 +77,7 @@ export default function HomePage() {
   }, [places, filter, search]);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {/* 라지 타이틀 헤더 */}
       <ScreenHeader
         subtitle="오늘도 좋은 곳 찾아봐요"

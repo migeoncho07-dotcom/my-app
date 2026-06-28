@@ -288,7 +288,7 @@ export default function MapPage() {
   const hasPins = places.some((p) => p.lat && p.lng);
 
   return (
-    <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', flexDirection: 'column' }}>
       {/* 디자인 시안 05: 지도는 타이틀 없이 꽉 차고, 검색창이 지도 위에 떠 있음 */}
       <div style={{ flex: 1, position: 'relative', minHeight: 320 }}>
         <div ref={mapRef} style={{ position: 'absolute', inset: 0, background: '#e8eef0' }} />
