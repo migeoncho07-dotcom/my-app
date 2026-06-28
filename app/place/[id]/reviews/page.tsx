@@ -58,7 +58,7 @@ export default function ReviewsPage() {
   }, [ratings, starFilter, sort]);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {/* 헤더 */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.back()} aria-label="뒤로" style={{ width: 40, height: 40, borderRadius: 12, flex: 'none', background: '#fff', border: '1px solid #E5E5EA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
