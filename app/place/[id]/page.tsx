@@ -162,12 +162,25 @@ export default function PlaceDetailPage() {
   }
 
   const hasCoord = place.lat && place.lng;
-  const mapUrl = hasCoord
-    ? `https://map.kakao.com/link/map/${encodeURIComponent(place.title)},${place.lat},${place.lng}`
-    : `https://map.kakao.com/link/search/${encodeURIComponent(place.address || place.title)}`;
-  const routeUrl = hasCoord
-    ? `https://map.kakao.com/link/to/${encodeURIComponent(place.title)},${place.lat},${place.lng}`
-    : `https://map.kakao.com/link/search/${encodeURIComponent(place.address || place.title)}`;
+  // 티맵 앱 호출 — 길찾기는 좌표로 경로안내, 지도보기는 주소로 검색
+  const tName = encodeURIComponent(place.title);
+  const tQuery = encodeURIComponent(place.address || place.title);
+  const tmapRoute = hasCoord
+    ? `tmap://route?goalname=${tName}&goalx=${place.lng}&goaly=${place.lat}`
+    : `tmap://search?name=${tQuery}`;
+  const tmapView = `tmap://search?name=${tQuery}`;
+
+  // 티맵 앱 열기 시도 → 미설치(화면 그대로)면 티맵 안내 페이지로
+  function openTmap(scheme: string) {
+    let left = false;
+    const onHide = () => { left = true; };
+    document.addEventListener('visibilitychange', onHide);
+    window.location.href = scheme;
+    window.setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      if (!left && !document.hidden) window.location.href = 'https://www.tmap.co.kr/';
+    }, 1500);
+  }
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -250,8 +263,8 @@ export default function PlaceDetailPage() {
           </div>
 
           <div style={{ padding: '14px 22px 26px', display: 'flex', gap: 9 }}>
-            <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(false)}>지도에서 보기</div></a>
-            <a href={routeUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1 }}><div style={btnStyle(true)}>길찾기</div></a>
+            <button onClick={() => openTmap(tmapView)} style={{ ...btnStyle(false), flex: 1 }}>지도에서 보기</button>
+            <button onClick={() => openTmap(tmapRoute)} style={{ ...btnStyle(true), flex: 1 }}>길찾기</button>
           </div>
         </>
       ) : (
