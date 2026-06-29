@@ -39,20 +39,93 @@ function htmlToText(html: string): string {
   return [title, ogSite, ogTitle, ogDesc, ldBlocks, body].filter(Boolean).join('\n').slice(0, 12000);
 }
 
-async function fetchLinkText(url: string): Promise<string> {
-  // 진짜 모바일 브라우저처럼 요청해야 네이버/인스타가 실제 페이지를 돌려줌
+const MOBILE_UA =
+  'Mozilla/5.0 (Linux; Android 13; SM-S918N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
+
+async function fetchHtml(url: string): Promise<{ html: string; finalUrl: string; ok: boolean }> {
   const res = await fetch(url, {
     headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Linux; Android 13; SM-S918N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+      'User-Agent': MOBILE_UA,
       Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
     },
     redirect: 'follow',
   });
-  if (!res.ok) throw new Error('fetch-failed');
   const html = await res.text();
-  return htmlToText(html);
+  return { html, finalUrl: res.url || url, ok: res.ok };
+}
+
+// 네이버 단축링크(naver.me) 등은 HTTP 리다이렉트가 아니라 meta/JS로 페이지를 넘기는
+// 경우가 있어, HTML 안의 다음 주소를 찾아 직접 따라감.
+function clientRedirect(html: string): string | null {
+  const meta = html.match(/<meta[^>]+http-equiv=["']?refresh["']?[^>]*content=["'][^"']*url=([^"'>]+)/i);
+  if (meta) return meta[1].replace(/&amp;/g, '&').trim();
+  const js = html.match(/(?:location\.(?:href|replace)\s*=\s*|location\.replace\(\s*)["']([^"']+)["']/i);
+  if (js) return js[1].replace(/&amp;/g, '&').trim();
+  return null;
+}
+
+function naverPlaceId(url: string): string | null {
+  const m = url.match(/(?:entry\/place|place|restaurant|hairshop|attraction)\/(\d{5,})/) || url.match(/[?&]id=(\d{5,})/);
+  return m ? m[1] : null;
+}
+
+// 네이버 장소 페이지에 박혀 있는 이름/주소/좌표를 best-effort로 뽑아냄
+function extractNaverInfo(html: string): string {
+  const g = (re: RegExp) => html.match(re)?.[1] ?? '';
+  const name = g(/"name"\s*:\s*"([^"]{1,80})"/);
+  const road = g(/"roadAddress"\s*:\s*"([^"]{1,120})"/);
+  const addr = g(/"address"\s*:\s*"([^"]{1,120})"/);
+  const y = g(/"y"\s*:\s*"?(3[0-9]\.\d{3,})"?/) || g(/"latitude"\s*:\s*"?(3[0-9]\.\d{3,})"?/);
+  const x = g(/"x"\s*:\s*"?(1[0-9]{2}\.\d{3,})"?/) || g(/"longitude"\s*:\s*"?(1[0-9]{2}\.\d{3,})"?/);
+  const lines: string[] = [];
+  if (name) lines.push(`장소명: ${name}`);
+  if (road || addr) lines.push(`주소: ${road || addr}`);
+  if (x && y) lines.push(`좌표(위도,경도): ${y},${x}`);
+  return lines.join('\n');
+}
+
+async function fetchLinkText(url: string): Promise<string> {
+  // meta/JS 리다이렉트까지 최대 4번 따라가서 진짜 페이지에 도달
+  let cur = url;
+  let html = '';
+  let finalUrl = url;
+  for (let hop = 0; hop < 4; hop++) {
+    const r = await fetchHtml(cur);
+    html = r.html;
+    finalUrl = r.finalUrl;
+    if (!r.ok && !html) throw new Error('fetch-failed');
+    const next = clientRedirect(html);
+    if (next && hop < 3) {
+      try {
+        cur = new URL(next, finalUrl).toString();
+        continue;
+      } catch {
+        break;
+      }
+    }
+    break;
+  }
+
+  // 네이버 장소면, 정보가 더 많은 모바일 장소 페이지(m.place.naver.com)에서 보강
+  let naverExtra = '';
+  if (/naver\./.test(finalUrl)) {
+    naverExtra = extractNaverInfo(html);
+    const pid = naverPlaceId(finalUrl);
+    if (!naverExtra && pid) {
+      try {
+        const r2 = await fetchHtml(`https://m.place.naver.com/place/${pid}/home`);
+        naverExtra = extractNaverInfo(r2.html);
+        if (!html.trim()) html = r2.html;
+      } catch {
+        /* 무시 */
+      }
+    }
+  }
+
+  const combined = [naverExtra, htmlToText(html)].filter(Boolean).join('\n').slice(0, 12000);
+  if (!combined.trim()) throw new Error('empty');
+  return combined;
 }
 
 export async function POST(req: NextRequest) {
